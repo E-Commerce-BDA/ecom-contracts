@@ -285,13 +285,22 @@ describe("sectionListResponseSchema", () => {
 describe("sectionReorderSchema", () => {
   it("rejects duplicate keys", () => {
     const result = sectionReorderSchema.safeParse({
+      pageKey: "homepage",
       orderedKeys: ["home-hero", "home-hero"],
     });
     expect(result.success).toBe(false);
   });
 
-  it("accepts a unique ordered key list", () => {
+  it("rejects missing pageKey", () => {
     const result = sectionReorderSchema.safeParse({
+      orderedKeys: ["home-hero", "home-banner"],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a unique ordered key list with pageKey", () => {
+    const result = sectionReorderSchema.safeParse({
+      pageKey: "homepage",
       orderedKeys: ["home-hero", "home-banner"],
     });
     expect(result.success).toBe(true);

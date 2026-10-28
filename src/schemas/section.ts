@@ -98,6 +98,7 @@ export const sectionListResponseSchema = z
 
 export const sectionReorderSchema = z
   .object({
+    pageKey: pageKeySchema,
     orderedKeys: z.array(sectionKeySchema).min(1).max(200),
   })
   .strict()
