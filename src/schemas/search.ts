@@ -160,3 +160,4 @@ export type IngestSearchDocumentsResponse = z.infer<
   typeof ingestSearchDocumentsResponseSchema
 >;
 export type SearchStats = z.infer<typeof searchStatsSchema>;
+
