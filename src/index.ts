@@ -13,3 +13,4 @@ export * from "./schemas/blogs.js";
 export * from "./schemas/media.js";
 export * from "./schemas/events.js";
 export * from "./schemas/jobs.js";
+export * from "./schemas/search.js";

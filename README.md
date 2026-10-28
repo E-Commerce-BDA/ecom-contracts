@@ -2,7 +2,7 @@
 
 Versioned shared contracts for the e-commerce platform.
 
-Status: Phase 2 bootstrap | Version 1.0.0 | Date 2026-10-28
+Status: Phase 2 bootstrap | Version 1.1.0 | Date 2026-10-28
 
 This package owns transport/storage shapes only. It never imports NestJS,
 React, storefront components, or service code. Consumers pin an exact release
