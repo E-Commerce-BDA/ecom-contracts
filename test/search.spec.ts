@@ -9,6 +9,7 @@ import {
   searchDocumentSchema,
   searchQuerySchema,
   searchResponseSchema,
+  searchResultItemSchema,
   searchSuggestResponseSchema,
   suggestQuerySchema,
 } from "../src/index.js";
@@ -53,7 +54,7 @@ describe("search contracts", () => {
       expect(searchDocumentSchema.parse(catDoc).documentType).toBe("category");
 
       const blogDoc = {
-        id: VALID_UUID,
+        id: "507f1f77bcf86cd799439021",
         documentType: "blog",
         title: "Best Trail Shoes 2026",
         slug: "best-trail-shoes-2026",
@@ -61,7 +62,33 @@ describe("search contracts", () => {
         status: "inactive",
         sourceUpdatedAt: NOW,
       };
-      expect(searchDocumentSchema.parse(blogDoc).status).toBe("inactive");
+      const parsedBlog = searchDocumentSchema.parse(blogDoc);
+      expect(parsedBlog.id).toBe("507f1f77bcf86cd799439021");
+      expect(parsedBlog.status).toBe("inactive");
+    });
+
+    it("accepts MongoDB ObjectId as well as UUID for searchDocumentSchema and searchResultItemSchema", () => {
+      const mongoId = "507f1f77bcf86cd799439021";
+      const doc = {
+        id: mongoId,
+        documentType: "blog",
+        title: "Mongo Blog",
+        slug: "mongo-blog",
+        content: "Content with Mongo ObjectId",
+        status: "active",
+        sourceUpdatedAt: NOW,
+      };
+      expect(searchDocumentSchema.parse(doc).id).toBe(mongoId);
+
+      const resultItem = searchResultItemSchema.parse({
+        id: mongoId,
+        type: "blog",
+        title: "Mongo Blog",
+        slug: "mongo-blog",
+        popularity: 10,
+        updatedAt: NOW,
+      });
+      expect(resultItem.id).toBe(mongoId);
     });
 
     it("rejects invalid document type or negative price", () => {

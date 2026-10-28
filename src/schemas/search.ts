@@ -13,7 +13,7 @@ export const searchSortOptionSchema = z.enum([
 
 export const searchDocumentSchema = z
   .object({
-    id: uuidSchema,
+    id: z.string().min(1).max(64),
     documentType: searchDocumentTypeSchema,
     title: z.string().min(1).max(255),
     slug: z.string().min(1).max(280),
@@ -33,7 +33,7 @@ export const searchDocumentSchema = z
 
 export const searchResultItemSchema = z
   .object({
-    id: uuidSchema,
+    id: z.string().min(1).max(64),
     type: searchDocumentTypeSchema,
     title: z.string().min(1).max(255),
     slug: z.string().min(1).max(280),
