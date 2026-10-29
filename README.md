@@ -2,7 +2,7 @@
 
 Versioned shared contracts for the e-commerce platform.
 
-Status: Phase 2 bootstrap | Version 1.1.0 | Date 2026-10-28
+Status: Phase 2 bootstrap | Version 1.4.0 | Date 2026-10-30
 
 This package owns transport/storage shapes only. It never imports NestJS,
 React, storefront components, or service code. Consumers pin an exact release
@@ -114,15 +114,55 @@ src/schemas/section-content.ts per-type content schemas
 src/schemas/section-settings.ts per-type settings allowlists
 src/schemas/section-catalog.ts admin governance catalog
 src/schemas/section.ts         discriminated union + response/reorder schemas
+src/schemas/theme.ts           theme settings + response
+src/schemas/navigation.ts      navigation settings + response
+src/schemas/pages.ts           page schema + admin DTOs
+src/schemas/page-settings.ts   page SEO/settings + response
+src/schemas/blogs.ts           blog schema + admin DTOs
+src/schemas/media.ts           media key/value schemas
+src/schemas/events.ts          event envelope + payload schemas
+src/schemas/topics.ts          topic registry + payload validation
+src/schemas/jobs.ts            SQS job schemas
+src/schemas/search.ts          search DTOs, queries, ingestion
 ```
-
-Future slices add theme, navigation, pages, blogs, media, page settings, event
-envelopes, and resize-image jobs. The first published version is `1.0.0` only
-when those Phase 2 schemas are complete.
 
 ---
 
-## 4. Release workflow
+## 4. Events and the topic registry
+
+Every event is an envelope plus a payload that is validated per topic. The
+operational catalog (producer, consumers, partitions, retention, partition key,
+DLQ) lives in code in `EVENT_TOPICS` and in prose in
+`Documentation/4.API-Design.md`.
+
+```ts
+import { parseEventEnvelope, readEventEnvelope } from "@ecom/contracts";
+
+const envelope = readEventEnvelope(raw); // legacy topic/eventType -> type
+const payload = parseEventEnvelope("order.created", envelope); // typed + strict
+```
+
+| Topic | Producer | Consumers | Partitions | Retention | Key |
+|---|---|---|---|---|---|
+| `user.registered` | auth-svc | notify-svc, analytics-svc | 1 | 7d | `userId` |
+| `cart.updated` | cart-svc | analytics-svc | 3 | 7d | `cartId` |
+| `cart.abandoned` | analytics-svc | notify-svc | 3 | 7d | `userId` |
+| `order.created` | order-svc | cart-svc, catalog-svc, notify-svc, analytics-svc | 3 | 30d | `orderId` |
+| `order.status.updated` | order-svc | catalog-svc, notify-svc | 3 | 30d | `orderId` |
+| `product.imported` | import-svc | catalog-svc, search-svc | 1 | 7d | `productId` |
+| `product.updated` | catalog-svc | search-svc | 3 | 7d | `productId` |
+| `category.updated` | catalog-svc | search-svc | 1 | 7d | `categoryId` |
+| `cms.updated` | cms-svc | — (HTTP webhook) | 1 | 7d | `sectionKey` |
+| `blog.updated` | cms-svc | search-svc | 1 | 7d | `blogId` |
+| `page.viewed` | analytics-svc | analytics-svc | 6 | 3d | `sessionId` |
+
+DLQ topics are `<topic>.dlq` (`dlqTopicName()`); `parseEventEnvelope()` returns
+the typed payload and throws on drift, so a consumer never keeps
+`Record<string, unknown>`.
+
+---
+
+## 5. Release workflow
 
 1. PR: `pnpm typecheck && pnpm test && pnpm build`.
 2. Merge to `main`.
