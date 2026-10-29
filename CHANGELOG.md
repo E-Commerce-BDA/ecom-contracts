@@ -2,6 +2,20 @@
 
 All notable contract changes are recorded here.
 
+## 1.3.0 — 2026-10-29
+
+Canonical event envelope with a dual-read/dual-write window (MINOR release, backwards compatible with 1.2.0).
+
+- Added optional `type` to `eventEnvelopeSchema`; `type` is the canonical event name and Kafka topic.
+- Made `topic` and `eventType` optional legacy fields; at least one of `type`, `topic`, or `eventType` is required.
+- Added `canonicalEventEnvelopeSchema` for 2.0.0-ready producers (`type`, `version`, and `idempotencyKey` required).
+- Added `readEventEnvelope()` to normalize legacy envelopes to `{id,type,version,timestamp,producer,idempotencyKey,payload}`; `version` defaults to 1 and `idempotencyKey` defaults to `id`.
+- Dual-write envelopes must keep `type`, `topic`, and `eventType` in agreement when `type` is present.
+
+## 1.2.0 — 2026-10-28
+
+- Widened search document and result IDs to `varchar(64)` strings.
+
 ## 1.1.0 — 2026-10-28
 
 Search domain contracts and event payloads (MINOR release, backwards compatible with 1.0.0).

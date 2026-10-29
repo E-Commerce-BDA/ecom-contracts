@@ -31,3 +31,10 @@ tarball; floating ranges are not allowed.
 - `null` is never a valid override. Omit the key to inherit.
 - A new major may provide `vN` subpath exports for a dual-publish window when a
   second major exists. v1 does not need that yet.
+
+## Event envelope transition
+
+- `1.3.0` accepts the canonical `type` field and the legacy `topic`/`eventType`
+  fields. Producers dual-write and consumers call `readEventEnvelope()`.
+- `2.0.0` requires `type`, `version`, and `idempotencyKey`; `topic` and
+  `eventType` are removed.

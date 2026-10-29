@@ -6,6 +6,7 @@ import {
   blogSchema,
   blogUpdatedPayloadSchema,
   cmsUpdatedPayloadSchema,
+  canonicalEventEnvelopeSchema,
   createBlogSchema,
   createPageSchema,
   eventEnvelopeSchema,
@@ -16,6 +17,7 @@ import {
   pageListResponseSchema,
   pageSchema,
   pageSettingsResponseSchema,
+  readEventEnvelope,
   resizeImageJobSchema,
   themeResponseSchema,
   themeSettingsSchema,
@@ -284,5 +286,83 @@ describe("Events & Jobs schemas", () => {
       widths: [320, 640, 1280],
     };
     expect(resizeImageJobSchema.safeParse(job).success).toBe(true);
+  });
+});
+
+describe("Event envelope 1.3.0", () => {
+  const base = {
+    id: "0190a1b2-c3d4-7e8f-9012-3456789abcde",
+    producer: "order-svc",
+    timestamp: "2026-10-29T10:00:00.000Z",
+    payload: { orderId: "0190a1b2-c3d4-7e8f-9012-3456789abcdf" },
+  };
+
+  it("accepts a canonical envelope and returns it unchanged", () => {
+    const envelope = {
+      ...base,
+      type: "order.created",
+      version: 1,
+      idempotencyKey: "order-created-1",
+    };
+    expect(canonicalEventEnvelopeSchema.safeParse(envelope).success).toBe(true);
+    expect(readEventEnvelope(envelope)).toEqual(envelope);
+  });
+
+  it("normalizes a legacy CMS envelope whose topic is not the event name", () => {
+    const envelope = {
+      ...base,
+      topic: "cms.events",
+      eventType: "cms.updated",
+    };
+    expect(readEventEnvelope(envelope)).toEqual({
+      ...base,
+      type: "cms.updated",
+      version: 1,
+      idempotencyKey: base.id,
+    });
+  });
+
+  it("accepts topic-only and eventType-only legacy envelopes", () => {
+    const topicOnly = { ...base, topic: "product.updated" };
+    const eventTypeOnly = { ...base, eventType: "blog.updated" };
+    expect(readEventEnvelope(topicOnly).type).toBe("product.updated");
+    expect(readEventEnvelope(eventTypeOnly).type).toBe("blog.updated");
+  });
+
+  it("rejects an envelope with no identifier", () => {
+    expect(eventEnvelopeSchema.safeParse(base).success).toBe(false);
+  });
+
+  it("rejects dual-write drift when type disagrees with a legacy field", () => {
+    const topicDrift = { ...base, type: "order.created", topic: "order.events" };
+    const eventTypeDrift = {
+      ...base,
+      type: "order.created",
+      eventType: "order.updated",
+    };
+    expect(eventEnvelopeSchema.safeParse(topicDrift).success).toBe(false);
+    expect(eventEnvelopeSchema.safeParse(eventTypeDrift).success).toBe(false);
+    expect(() => readEventEnvelope(topicDrift)).toThrow();
+    expect(() => readEventEnvelope(eventTypeDrift)).toThrow();
+  });
+
+  it("accepts a dual-write envelope when all identifiers agree", () => {
+    const envelope = {
+      ...base,
+      type: "cms.updated",
+      topic: "cms.updated",
+      eventType: "cms.updated",
+    };
+    expect(readEventEnvelope(envelope).type).toBe("cms.updated");
+  });
+
+  it("requires version and idempotencyKey in the canonical schema", () => {
+    const envelope = { ...base, type: "order.created" };
+    expect(canonicalEventEnvelopeSchema.safeParse(envelope).success).toBe(false);
+  });
+
+  it("rejects unknown fields", () => {
+    const envelope = { ...base, type: "order.created", extra: true };
+    expect(eventEnvelopeSchema.safeParse(envelope).success).toBe(false);
   });
 });
