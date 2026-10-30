@@ -289,6 +289,22 @@ describe("page.viewed payload", () => {
 });
 
 describe("topic registry", () => {
+  it("lists eleven topics in the canonical order", () => {
+    expect(EVENT_TOPIC_NAMES).toEqual([
+      "user.registered",
+      "cart.updated",
+      "cart.abandoned",
+      "order.created",
+      "order.status.updated",
+      "product.imported",
+      "product.updated",
+      "category.updated",
+      "cms.updated",
+      "blog.updated",
+      "page.viewed",
+    ]);
+  });
+
   it("lists eleven topics and a schema for every one of them", () => {
     expect(EVENT_TOPIC_NAMES).toHaveLength(11);
     expect(Object.keys(eventPayloadSchemas).sort()).toEqual(
@@ -336,6 +352,35 @@ describe("topic registry", () => {
     expect(() =>
       parseEventPayload("order.created", { ...orderCreated, grandTotal: -1 }),
     ).toThrow();
+  });
+});
+
+describe("PII guard", () => {
+  const email = "ada@example.com";
+
+  it("rejects an email on the four topics that carry identity", () => {
+    expect(
+      userRegisteredPayloadSchema.safeParse({
+        userId: uuid("501"),
+        registeredAt: "2026-10-29T08:00:00.000Z",
+        email,
+      }).success,
+    ).toBe(false);
+    expect(
+      cartUpdatedPayloadSchema.safeParse({ ...cartUpdated, email }).success,
+    ).toBe(false);
+    expect(orderCreatedPayloadSchema.safeParse({ ...orderCreated, email }).success).toBe(
+      false,
+    );
+    expect(
+      pageViewedPayloadSchema.safeParse({
+        sessionId: "sess-abc",
+        page: "/",
+        eventKind: "pageview",
+        timestamp: "2026-10-29T10:00:00.000Z",
+        email,
+      }).success,
+    ).toBe(false);
   });
 });
 
