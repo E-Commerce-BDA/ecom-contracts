@@ -47,6 +47,7 @@ export const themeToggleSchema = z
   })
   .strict();
 
+/** @deprecated Prefer catalog.badges and product.badges single source of truth */
 export const customBadgeSchema = z
   .object({
     id: z.string().min(1).max(32),
@@ -58,6 +59,7 @@ export const customBadgeSchema = z
   })
   .strict();
 
+/** @deprecated Prefer catalog.badges and product.badges single source of truth */
 export const themeBadgesSchema = z
   .object({
     custom: z.array(customBadgeSchema).max(20).optional(),
@@ -134,6 +136,42 @@ export const themeDialogSchema = z
   })
   .strict();
 
+export const themeProductCardSchema = z
+  .object({
+    cardType: z.enum(["standard", "minimal", "compact", "overlay", "horizontal"]).optional(),
+    mediaRatio: z.enum(["1:1", "3:4", "4:5", "4:3", "16:9"]).optional(),
+    borderRadius: z.number().int().min(0).max(24).optional(),
+    imageBorderRadius: z.number().int().min(0).max(24).optional(),
+    cardPad: z.number().int().min(0).max(24).optional(),
+    cardBg: colorOrEmptySchema.optional(),
+    borderColor: colorOrEmptySchema.optional(),
+    hoverCardBg: colorOrEmptySchema.optional(),
+    hoverBorderColor: colorOrEmptySchema.optional(),
+    mediaBg: colorOrEmptySchema.optional(),
+    textColor: colorOrEmptySchema.optional(),
+    mutedTextColor: colorOrEmptySchema.optional(),
+    priceColor: colorOrEmptySchema.optional(),
+    comparePriceColor: colorOrEmptySchema.optional(),
+    imageBlendMode: z.enum(["normal", "multiply", "darken", "overlay", "screen"]).optional(),
+    imageFit: z.enum(["cover", "contain"]).optional(),
+    badgePosition: z.enum(["left", "right"]).optional(),
+    showBadge: z.boolean().optional(),
+    showRatings: z.boolean().optional(),
+    showDept: z.boolean().optional(),
+    showSwatches: z.boolean().optional(),
+    showPills: z.boolean().optional(),
+    hoverMode: z.enum(["none", "image", "actions", "zoom"]).optional(),
+    ctaVariant: z.enum(["overlay", "below", "inline", "footer", "none"]).optional(),
+    ctaStyle: z.enum(["icon", "label", "icon-label"]).optional(),
+    ctaSet: z.array(z.enum(["quick-view", "wishlist", "add-to-cart", "share"])).max(3).optional(),
+    ctaPosition: z.enum(["left", "center", "right"]).optional(),
+    showActionsOnTouch: z.boolean().optional(),
+    nameSize: z.number().int().min(12).max(22).optional(),
+    priceSize: z.number().int().min(12).max(22).optional(),
+    textAlign: z.enum(["left", "center", "right"]).optional(),
+  })
+  .strict();
+
 export const themeSettingsSchema = z
   .object({
     button: themeButtonSchema.optional(),
@@ -146,6 +184,7 @@ export const themeSettingsSchema = z
     select: themeSelectSchema.optional(),
     tooltip: themeTooltipSchema.optional(),
     dialog: themeDialogSchema.optional(),
+    productCard: themeProductCardSchema.optional(),
   })
   .strict();
 
@@ -167,5 +206,6 @@ export type ThemeTextareaField = z.infer<typeof themeTextareaSchema>;
 export type ThemeSelectField = z.infer<typeof themeSelectSchema>;
 export type ThemeTooltipField = z.infer<typeof themeTooltipSchema>;
 export type ThemeDialogField = z.infer<typeof themeDialogSchema>;
+export type ThemeProductCardField = z.infer<typeof themeProductCardSchema>;
 export type ThemeSettings = z.infer<typeof themeSettingsSchema>;
 export type ThemeResponse = z.infer<typeof themeResponseSchema>;

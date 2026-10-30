@@ -15,3 +15,4 @@ export * from "./schemas/events.js";
 export * from "./schemas/topics.js";
 export * from "./schemas/jobs.js";
 export * from "./schemas/search.js";
+export * from "./schemas/catalog.js";

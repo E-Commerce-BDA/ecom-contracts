@@ -21,6 +21,13 @@ import {
   resizeImageJobSchema,
   themeResponseSchema,
   themeSettingsSchema,
+  themeProductCardSchema,
+  badgeSchema,
+  createBadgeSchema,
+  productBadgeAssignmentSchema,
+  productBadgeItemSchema,
+  productCardOptionSchema,
+  productCardSettingsSchema,
 } from "../src/index.js";
 
 describe("Theme schemas", () => {
@@ -55,6 +62,87 @@ describe("Theme schemas", () => {
       button: { unknownField: true },
     });
     expect(res.success).toBe(false);
+  });
+
+  it("parses valid themeProductCard in themeSettingsSchema", () => {
+    const res = themeSettingsSchema.safeParse({
+      productCard: {
+        cardType: "standard",
+        mediaRatio: "4:5",
+        borderRadius: 8,
+        cardBg: "#ffffff",
+        borderColor: "#e2e8f0",
+        ctaVariant: "below",
+        ctaStyle: "icon-label",
+        ctaSet: ["add-to-cart", "wishlist"],
+        showSwatches: true,
+      },
+    });
+    expect(res.success).toBe(true);
+  });
+});
+
+describe("Catalog & ProductCard schemas", () => {
+  it("validates badge creation and full badge schema", () => {
+    const create = createBadgeSchema.safeParse({
+      key: "eco-friendly",
+      label: "Eco Friendly",
+      bg: "#10b981",
+      textColor: "#ffffff",
+      borderStyle: "solid",
+    });
+    expect(create.success).toBe(true);
+
+    const fullBadge = badgeSchema.safeParse({
+      id: "a0000000-0000-0000-0000-000000000001",
+      key: "sale",
+      label: "Sale",
+      bg: "#ef4444",
+      textColor: "#ffffff",
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    expect(fullBadge.success).toBe(true);
+  });
+
+  it("validates product badge item and assignment", () => {
+    const assignment = productBadgeAssignmentSchema.safeParse({
+      productId: "b0000000-0000-0000-0000-000000000001",
+      badgeId: "a0000000-0000-0000-0000-000000000001",
+      sortOrder: 1,
+    });
+    expect(assignment.success).toBe(true);
+
+    const item = productBadgeItemSchema.safeParse({
+      id: "a0000000-0000-0000-0000-000000000001",
+      key: "new",
+      label: "New",
+      bg: "#3b82f6",
+      textColor: "#ffffff",
+    });
+    expect(item.success).toBe(true);
+  });
+
+  it("validates product card options with pills and color swatches", () => {
+    const option = productCardOptionSchema.safeParse({
+      name: "Color",
+      displayType: "swatch",
+      showOnCard: true,
+      values: [
+        { value: "Navy", swatchHex: "#000080" },
+        { value: "Crimson", swatchHex: "#dc143c" },
+      ],
+    });
+    expect(option.success).toBe(true);
+
+    const sizeOption = productCardOptionSchema.safeParse({
+      name: "Size",
+      displayType: "pill",
+      showOnCard: true,
+      values: [{ value: "S" }, { value: "M" }, { value: "L" }],
+    });
+    expect(sizeOption.success).toBe(true);
   });
 });
 
