@@ -169,6 +169,17 @@ export const themeProductCardSchema = z
     nameSize: z.number().int().min(12).max(22).optional(),
     priceSize: z.number().int().min(12).max(22).optional(),
     textAlign: z.enum(["left", "center", "right"]).optional(),
+    eyebrow: z.enum(["category", "brand", "none"]).optional(),
+    imageNav: z.enum(["hover", "always", "touch", "none"]).optional(),
+    imageIndicator: z.enum(["dots", "bars", "count", "none"]).optional(),
+    imageIndicatorPosition: z.enum(["bottom", "top"]).optional(),
+    imageLoop: z.boolean().optional(),
+    imageLimit: z.number().int().min(1).max(10).optional(),
+    selectionMode: z.enum(["preview", "commit-only", "visual"]).optional(),
+    selectionEffects: z.array(z.enum(["image", "price", "stock"])).optional(),
+    colsDesktop: z.number().int().min(3).max(5).optional(),
+    colsTablet: z.number().int().min(2).max(3).optional(),
+    colsPhone: z.number().int().min(1).max(2).optional(),
   })
   .strict();
 

@@ -56,6 +56,13 @@ export const productBadgeItemSchema = z
   .strict();
 
 export const optionDisplayTypeSchema = z.enum(["text", "pill", "swatch"]);
+export const optionCardPlacementSchema = z.enum([
+  "info",
+  "media",
+  "brand-hover",
+  "media-hover-top",
+  "hidden",
+]);
 
 export const productCardOptionValueSchema = z
   .object({
@@ -74,7 +81,20 @@ export const productCardOptionSchema = z
     name: z.string().min(1).max(100),
     displayType: optionDisplayTypeSchema,
     showOnCard: z.boolean().default(false),
+    cardPlacement: optionCardPlacementSchema.default("info").optional(),
     values: z.array(productCardOptionValueSchema),
+  })
+  .strict();
+
+export const cardVariantSchema = z
+  .object({
+    id: uuidSchema,
+    sku: z.string().min(1).max(100),
+    price: z.number().min(0),
+    compareAtPrice: z.number().min(0).nullable().optional(),
+    stock: z.number().int().min(0),
+    imageUrl: z.string().url().max(2048).nullable().optional(),
+    optionValues: z.record(z.string(), z.string()),
   })
   .strict();
 
@@ -87,6 +107,8 @@ export type UpdateBadgeInput = z.infer<typeof updateBadgeSchema>;
 export type ProductBadgeAssignment = z.infer<typeof productBadgeAssignmentSchema>;
 export type ProductBadgeItem = z.infer<typeof productBadgeItemSchema>;
 export type OptionDisplayType = z.infer<typeof optionDisplayTypeSchema>;
+export type OptionCardPlacement = z.infer<typeof optionCardPlacementSchema>;
 export type ProductCardOptionValue = z.infer<typeof productCardOptionValueSchema>;
 export type ProductCardOption = z.infer<typeof productCardOptionSchema>;
+export type CardVariant = z.infer<typeof cardVariantSchema>;
 export type ProductCardSettings = z.infer<typeof productCardSettingsSchema>;
