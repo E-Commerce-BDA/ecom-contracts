@@ -250,6 +250,39 @@ describe("Media schemas", () => {
     };
     expect(mediaSchema.safeParse(media).success).toBe(false);
   });
+
+  it("accepts a media record whose visibility is public or private", () => {
+    const base = {
+      id: "med_04",
+      key: "media/2026/10/0190a1b2-c3d4-7e8f-9012-3456789abcde.webp",
+      url: "https://example.com/private.webp",
+      mimeType: "image/webp",
+      sizeBytes: 1200,
+      usage: "page",
+    };
+
+    expect(mediaSchema.safeParse({ ...base, visibility: "public" }).success).toBe(
+      true,
+    );
+    expect(
+      mediaSchema.safeParse({ ...base, visibility: "private" }).success,
+    ).toBe(true);
+    // Absent stays valid: 1.4.0 payloads must keep parsing in 1.5.0.
+    expect(mediaSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("rejects an unknown media visibility", () => {
+    const media = {
+      id: "med_05",
+      key: "media/2026/10/0190a1b2-c3d4-7e8f-9012-3456789abcde.webp",
+      url: "https://example.com/secret.webp",
+      mimeType: "image/webp",
+      sizeBytes: 1200,
+      usage: "page",
+      visibility: "secret",
+    };
+    expect(mediaSchema.safeParse(media).success).toBe(false);
+  });
 });
 
 describe("Events & Jobs schemas", () => {

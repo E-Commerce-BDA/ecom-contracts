@@ -17,6 +17,13 @@ export const mediaMimeTypeSchema = z.enum([
   "image/avif",
 ]);
 
+/**
+ * Delivery policy for a stored asset. `public` is servable through the
+ * unauthenticated file route; `private` is reachable only from the admin file
+ * route. Absent on the wire means `public`, so 1.4.0 payloads stay valid.
+ */
+export const mediaVisibilitySchema = z.enum(["public", "private"]);
+
 export const mediaKeySchema = z
   .string()
   .regex(
@@ -39,6 +46,7 @@ export const mediaSchema = z
       .positive()
       .max(10 * 1024 * 1024, "max file size is 10 MB"),
     usage: mediaUsageSchema,
+    visibility: mediaVisibilitySchema.optional(),
     uploadedBy: z.string().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
@@ -56,5 +64,6 @@ export const mediaListResponseSchema = z
 
 export type MediaUsage = z.infer<typeof mediaUsageSchema>;
 export type MediaMimeType = z.infer<typeof mediaMimeTypeSchema>;
+export type MediaVisibility = z.infer<typeof mediaVisibilitySchema>;
 export type Media = z.infer<typeof mediaSchema>;
 export type MediaListResponse = z.infer<typeof mediaListResponseSchema>;

@@ -1,6 +1,6 @@
 {
   "name": "@ecom/contracts",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Versioned shared contracts for the e-commerce platform",
   "license": "UNLICENSED",

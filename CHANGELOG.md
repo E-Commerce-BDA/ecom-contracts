@@ -2,6 +2,13 @@
 
 All notable contract changes are recorded here.
 
+## 1.5.0 — 2026-10-30
+
+Media visibility (MINOR release, backwards compatible with 1.4.0).
+
+- Added `mediaVisibilitySchema` (`public` | `private`) and the `MediaVisibility` type.
+- Added **optional** `visibility` to `mediaSchema`. Absent means `public`, so every 1.4.0-era record and payload keeps parsing; `private` assets are served only by the authenticated admin file route. cms-003 is the producing change (`cms_media.visibility`, default `public`).
+
 ## 1.4.0 — 2026-10-30
 
 Event payload schemas and the topic registry (MINOR release, backwards compatible with 1.3.0).
