@@ -17,6 +17,8 @@ tarball; floating ranges are not allowed.
 - Add a new section type, event type, job type, or schema export.
 - Add a new enum value when consumers can safely ignore unknown values.
 - Add a new settings key to a type's allowlist.
+- Add a queue or topic to a registry (`TASK_QUEUES`, `EVENT_TOPICS`). Renaming or
+  removing one is MAJOR: the name is the contract with the broker.
 
 ## PATCH
 
