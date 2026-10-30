@@ -2,7 +2,7 @@
 
 Versioned shared contracts for the e-commerce platform.
 
-Status: Phase 2 bootstrap | Version 1.5.0 | Date 2026-10-30
+Status: Phase 2 bootstrap | Version 1.8.0 | Date 2026-10-30
 
 This package owns transport/storage shapes only. It never imports NestJS,
 React, storefront components, or service code. Consumers pin an exact release
@@ -119,10 +119,12 @@ src/schemas/navigation.ts      navigation settings + response
 src/schemas/pages.ts           page schema + admin DTOs
 src/schemas/page-settings.ts   page SEO/settings + response
 src/schemas/blogs.ts           blog schema + admin DTOs
+src/schemas/catalog.ts         badges + product-card option/variant schemas
 src/schemas/media.ts           media key/value schemas
 src/schemas/events.ts          event envelope + payload schemas
 src/schemas/topics.ts          topic registry + payload validation
 src/schemas/jobs.ts            SQS job schemas
+src/schemas/queues.ts          task-queue registry (queues + DLQs)
 src/schemas/search.ts          search DTOs, queries, ingestion
 ```
 
@@ -162,7 +164,31 @@ the typed payload and throws on drift, so a consumer never keeps
 
 ---
 
-## 5. Release workflow
+## 5. Task queues (SQS)
+
+Tasks are commands for exactly one worker, so they live on SQS and never on the
+event log. `TASK_QUEUES` in `src/schemas/queues.ts` is the registry; the payloads
+are in `src/schemas/jobs.ts` and are validated with `safeParse` before enqueue and
+after dequeue.
+
+| Queue | Producer | Consumer | DLQ | Max receives | Visibility | Retention |
+|---|---|---|---|---|---|---|
+| `notify-send-email` | notify-svc | notify-svc | `notify-send-email-dlq` | 5 | 60s | 14d |
+| `import-process-row` | import-svc | import-svc | `import-process-row-dlq` | 5 | 60s | 14d |
+| `media-resize-image` | cms-svc | cms-svc | `media-resize-image-dlq` | 5 | 60s | 14d |
+
+Queue names are hyphenated because SQS accepts only alphanumerics, hyphens and
+underscores — a dot is legal only as a trailing `.fifo`. The same three names are
+created locally by `ecom-infra/localstack/init/ready.d/10-sqs-queues.sh` and in
+AWS by `ecom-infra/aws/sqs.tf`, so a rename has to land in all three places.
+
+`sendEmailJobSchema` carries no recipient address: it names the `userId`,
+`orderId`, or `cartId` the email is about and the worker resolves the address.
+`idempotencyKey` is required, because SQS is at-least-once.
+
+---
+
+## 6. Release workflow
 
 1. PR: `pnpm typecheck && pnpm test && pnpm build`.
 2. Merge to `main`.

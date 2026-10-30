@@ -2,6 +2,35 @@
 
 All notable contract changes are recorded here.
 
+## 1.8.0 — 2026-10-30
+
+Task-queue schemas and the queue registry (MINOR release, backwards compatible with 1.7.0).
+
+- Added `sendEmailJobSchema` (`src/schemas/jobs.ts`): `template` (`order-confirmation` | `cart-abandoned` | `welcome`), optional `userId`/`orderId`/`cartId`, optional `locale`, required `idempotencyKey`. There is **no** recipient address field — the same PII rule that keeps emails out of the Kafka log keeps them out of SQS; notify-svc resolves the address from the named aggregate.
+- Added `processImportRowJobSchema`: `jobId`, `rowNumber` (positive), `source` (`csv` | `json`), `stockMode` (`replace` | `add`), and `row` as a record of scalars.
+- Added `emailTemplateSchema`, `importSourceSchema`, `importStockModeSchema`, `importRowValueSchema` and their inferred types.
+- Added `src/schemas/queues.ts`: `TASK_QUEUES` (three queues × producer/consumer/`-dlq` twin/`maxReceiveCount: 5`/`visibilityTimeoutSeconds: 60`/`retention: 14d`), `TASK_QUEUE_NAMES`, `TASK_DLQ_NAMES`, `taskQueueNameSchema`, `isTaskQueue()`.
+- `resizeImageJobSchema` is unchanged.
+- Removed the `reminder.dispatch` queue name, which no producer ever emitted.
+
+**Naming.** Queue names are hyphenated (`notify-send-email`, `import-process-row`, `media-resize-image`) because SQS accepts only alphanumerics, hyphens and underscores — a dot is legal only as a trailing `.fifo`. The dotted spellings used in earlier design notes were not creatable, so they never shipped.
+
+## 1.7.0 — 2026-10-30
+
+Product-card placement and variant contracts (MINOR release, backwards compatible with 1.6.0).
+
+- Added `optionCardPlacementSchema` (`info` | `media` | `brand-hover` | `media-hover-top` | `hidden`) and optional `cardPlacement` on `productCardOptionSchema`, defaulting to `info`.
+- Added `cardVariantSchema` (`id`, `sku`, `price`, optional `compareAtPrice`/`imageUrl`, `stock`, `optionValues`).
+- Extended `themeProductCardSchema` with the gallery and grid controls: `eyebrow`, `imageNav`, `imageIndicator`, `imageIndicatorPosition`, `imageLoop`, `imageLimit`, `selectionMode`, `selectionEffects`, `colsDesktop`, `colsTablet`, `colsPhone`.
+
+## 1.6.0 — 2026-10-30
+
+Catalog badges and product-card settings (MINOR release, backwards compatible with 1.5.0).
+
+- Added `src/schemas/catalog.ts`: `badgeSchema`, `createBadgeSchema`, `updateBadgeSchema`, `badgeBorderStyleSchema`, `productBadgeAssignmentSchema`, `productBadgeItemSchema`, plus the product-card option schemas `optionDisplayTypeSchema`, `productCardOptionValueSchema`, `productCardOptionSchema` and the `productCardSettingsSchema` alias of `themeProductCardSchema`.
+- Added `themeProductCardSchema` to `src/schemas/theme.ts` — the appearance half of the card (layout, media, colours, CTA, typography) — and wired it into `themeSettingsSchema`.
+- Deprecated `customBadgeSchema` and `themeBadgesSchema`: catalog badges are now the single source of truth.
+
 ## 1.5.0 — 2026-10-30
 
 Media visibility (MINOR release, backwards compatible with 1.4.0).
