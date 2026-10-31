@@ -2,6 +2,17 @@
 
 All notable contract changes are recorded here.
 
+## 1.9.0 — 2026-10-31
+
+Product variants on the import event (MINOR release; see the adoption ordering
+below before a producer emits `variants`).
+
+- Added `productVariantRefSchema` (`src/schemas/events.ts`): optional `id`, required `sku` (`min 1`, `max 64`, i.e. the `product_variants.sku` column width), `price` (number or numeric string, as everywhere money crosses a `DECIMAL`), optional `effectivePrice`, `stock` (non-negative integer), `imageUrl`, `isActive`. `.strict()` like every other payload.
+- `productImportedPayloadSchema` gains `variants?: ProductVariantRef[]` and the `ProductVariantRef` type. cat-008 upserts by `sku` and lets Postgres mint `id` on a first import, which is why `id` is optional.
+- `productUpdatedPayloadSchema` is **not** changed. The asymmetry is deliberate: an importer owns variants wholesale, while `product.updated` describes a single edit and has no batch semantics. Adding `variants` there is a separate decision with its own consumer-ordering problem.
+
+**Adoption ordering is part of this release, not an afterthought.** Every payload schema here is `.strict()`, so `parseEventPayload` rejects unknown keys by design. That means `variants` is *not* backward compatible in practice even though the field is optional: a producer that starts emitting `variants` while a consumer still pins 1.8.0 makes that consumer dead-letter every `product.imported` record it sees. The 1.9.0 tarball therefore has to reach **both** `product.imported` consumers — search-svc (which parses the payload through `event-interpreter`) and catalog-svc (cat-008) — before any fixture, importer or producer writes the field. `@ecom/messaging` 0.3.0 widens its peer range to `>=1.9.0 <2` for the same reason.
+
 ## 1.8.0 — 2026-10-30
 
 Task-queue schemas and the queue registry (MINOR release, backwards compatible with 1.7.0).

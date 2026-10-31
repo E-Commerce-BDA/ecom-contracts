@@ -34,6 +34,21 @@ tarball; floating ranges are not allowed.
 - A new major may provide `vN` subpath exports for a dual-publish window when a
   second major exists. v1 does not need that yet.
 
+## Strict-schema adoption ordering
+
+Every event payload schema is `.strict()`, so adding an optional field is MINOR
+for the *schema* but can still break a *stale consumer*: `parseEventPayload`
+rejects the unknown key and the consumer dead-letters a record it used to read.
+
+An additive payload field therefore ships in that order, never in reverse:
+
+1. Publish the MINOR contracts release.
+2. Re-pin **every** consumer of that topic to it and deploy.
+3. Only then may a producer, fixture or importer start writing the new field.
+
+`product.imported.variants` (1.9.0) is the worked example: search-svc and
+catalog-svc both had to move to 1.9.0 before the first payload carried it.
+
 ## Event envelope transition
 
 - `1.3.0` accepts the canonical `type` field and the legacy `topic`/`eventType`

@@ -13,6 +13,8 @@ import {
   pageViewedPayloadSchema,
   parseEventEnvelope,
   parseEventPayload,
+  productImportedPayloadSchema,
+  productUpdatedPayloadSchema,
   userRegisteredPayloadSchema,
   type EventEnvelope,
 } from "../src/index.js";
@@ -282,6 +284,118 @@ describe("page.viewed payload", () => {
       page: "/",
       eventKind: "click",
       timestamp: "2026-10-29T10:00:00.000Z",
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("product.imported payload", () => {
+  const imported = {
+    productId: uuid("201"),
+    sku: "IMP-LINEN-001",
+    name: "Linen Shirt",
+    slug: "linen-shirt",
+    price: 24.5,
+    stock: 40,
+    images: ["catalog/linen-shirt/front.jpg", "catalog/linen-shirt/side.jpg"],
+    status: "active" as const,
+    updatedAt: "2026-10-30T12:00:00.000Z",
+  };
+
+  const variant = {
+    sku: "IMP-LINEN-001-M-WHITE",
+    price: 26.9,
+    stock: 12,
+    imageUrl: "catalog/linen-shirt/variant-white.jpg",
+    isActive: true,
+  };
+
+  it("still parses a payload with no variants key (1.8.0 shape)", () => {
+    const parsed = productImportedPayloadSchema.parse(imported);
+
+    expect(parsed.variants).toBeUndefined();
+  });
+
+  it("accepts a variants array and keeps the optional id absent", () => {
+    const parsed = productImportedPayloadSchema.parse({
+      ...imported,
+      variants: [variant],
+    });
+
+    expect(parsed.variants).toHaveLength(1);
+    expect(parsed.variants?.[0]?.id).toBeUndefined();
+  });
+
+  it("accepts a variant id, string money and effectivePrice", () => {
+    const parsed = productImportedPayloadSchema.parse({
+      ...imported,
+      variants: [
+        { ...variant, id: uuid("801"), price: "26.90", effectivePrice: 19.9 },
+      ],
+    });
+
+    expect(parsed.variants?.[0]?.effectivePrice).toBe(19.9);
+  });
+
+  it("rejects a variant without a sku", () => {
+    const { sku: _sku, ...withoutSku } = variant;
+    const result = productImportedPayloadSchema.safeParse({
+      ...imported,
+      variants: [withoutSku],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an unknown key inside a variant", () => {
+    const result = productImportedPayloadSchema.safeParse({
+      ...imported,
+      variants: [{ ...variant, name: "White / M" }],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a variant with a sku longer than the column", () => {
+    const result = productImportedPayloadSchema.safeParse({
+      ...imported,
+      variants: [{ ...variant, sku: "S".repeat(65) }],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a negative variant stock", () => {
+    const result = productImportedPayloadSchema.safeParse({
+      ...imported,
+      variants: [{ ...variant, stock: -1 }],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an unknown key on the payload itself", () => {
+    const result = productImportedPayloadSchema.safeParse({
+      ...imported,
+      variants: [variant],
+      variantCount: 1,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("product.updated payload", () => {
+  it("has no variants key, unlike product.imported", () => {
+    const result = productUpdatedPayloadSchema.safeParse({
+      productId: uuid("201"),
+      name: "Linen Shirt",
+      slug: "linen-shirt",
+      price: 24.5,
+      status: "active",
+      updatedAt: "2026-10-30T12:00:00.000Z",
+      variants: [],
     });
 
     expect(result.success).toBe(false);

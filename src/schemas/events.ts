@@ -85,6 +85,28 @@ export const blogUpdatedPayloadSchema = z
   })
   .strict();
 
+/**
+ * One sellable variant inside a `product.imported` payload.
+ *
+ * `product_variants` owns no presentation columns, so this carries only what an
+ * import is allowed to write: identity (`sku`), money, stock and visibility.
+ * `id` is optional because a first import of an external catalogue has no local
+ * uuid yet — the consumer upserts by `sku` and lets Postgres mint one.
+ */
+export const productVariantRefSchema = z
+  .object({
+    id: uuidSchema.optional(),
+    sku: z.string().min(1).max(64),
+    price: z.union([z.number().nonnegative(), z.string().min(1)]),
+    effectivePrice: z
+      .union([z.number().nonnegative(), z.string().min(1)])
+      .optional(),
+    stock: z.number().int().nonnegative().optional(),
+    imageUrl: imageRefSchema.optional(),
+    isActive: z.boolean().optional(),
+  })
+  .strict();
+
 export const productImportedPayloadSchema = z
   .object({
     productId: uuidSchema,
@@ -103,6 +125,7 @@ export const productImportedPayloadSchema = z
     stock: z.number().int().nonnegative().optional(),
     images: z.array(imageRefSchema).optional(),
     imageUrl: imageRefSchema.optional(),
+    variants: z.array(productVariantRefSchema).optional(),
     status: z.enum(["active", "inactive"]),
     updatedAt: isoDateSchema,
   })
@@ -283,6 +306,7 @@ export type CanonicalEventEnvelope = z.infer<
 export type CmsUpdatedPayload = z.infer<typeof cmsUpdatedPayloadSchema>;
 export type BlogUpdatedPayload = z.infer<typeof blogUpdatedPayloadSchema>;
 export type ProductImportedPayload = z.infer<typeof productImportedPayloadSchema>;
+export type ProductVariantRef = z.infer<typeof productVariantRefSchema>;
 export type ProductUpdatedPayload = z.infer<typeof productUpdatedPayloadSchema>;
 export type CategoryUpdatedPayload = z.infer<
   typeof categoryUpdatedPayloadSchema
