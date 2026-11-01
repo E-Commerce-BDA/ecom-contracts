@@ -226,30 +226,49 @@ describe("order.status.updated payload", () => {
     expect(parsed.note).toBeNull();
   });
 
-  it("accepts a refund amount as string and as number", () => {
-    const withString = orderStatusUpdatedPayloadSchema.parse({
-      ...statusUpdated,
-      to: "refunded",
-      refundAmount: "49.90",
-      refundReference: "re_123",
-    });
-    const withNumber = orderStatusUpdatedPayloadSchema.parse({
+  it("accepts a refund amount as a number", () => {
+    const parsed = orderStatusUpdatedPayloadSchema.parse({
       ...statusUpdated,
       to: "refunded",
       refundAmount: 49.9,
+      refundReference: "re_123",
     });
 
-    expect(withString.refundAmount).toBe("49.90");
-    expect(withNumber.refundAmount).toBe(49.9);
+    expect(parsed.refundAmount).toBe(49.9);
   });
 
-  it("rejects money with three decimals", () => {
+  it("rejects a refund amount sent as a decimal string", () => {
+    // The producer parses its DECIMAL column at the DB boundary, so the text
+    // form the old union tolerated is now a contract violation, not a shape.
     const result = orderStatusUpdatedPayloadSchema.safeParse({
       ...statusUpdated,
-      refundAmount: "49.901",
+      to: "refunded",
+      refundAmount: "49.90",
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("rejects a negative refund amount", () => {
+    const result = orderStatusUpdatedPayloadSchema.safeParse({
+      ...statusUpdated,
+      to: "refunded",
+      refundAmount: -1,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("leaves the decimal scale to the producer's column", () => {
+    // Scale is governed by DECIMAL(12,2) at the source, not re-checked on the
+    // wire: a number carries no observable scale.
+    const parsed = orderStatusUpdatedPayloadSchema.parse({
+      ...statusUpdated,
+      to: "refunded",
+      refundAmount: 49.901,
+    });
+
+    expect(parsed.refundAmount).toBe(49.901);
   });
 
   it("rejects an unknown status", () => {

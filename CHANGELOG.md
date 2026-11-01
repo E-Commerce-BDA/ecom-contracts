@@ -2,6 +2,19 @@
 
 All notable contract changes are recorded here.
 
+## 1.10.0 — 2026-11-01
+
+`refundAmount` is one wire type (released as MINOR; the classification is argued below).
+
+- `moneySchema` (`src/schemas/events.ts`) is now `z.number().nonnegative()`. It was `z.union([z.number().nonnegative(), z.string().regex(/^\d+(?:\.\d{1,2})?$/)])`. Its only consumer is `orderStatusUpdatedPayloadSchema.refundAmount`; nothing else in the package uses it.
+- The union existed because `pg` returns a `DECIMAL` column as text, so the producer that read the amount straight off the row emitted `"118.00"` while a hand-built JavaScript payload emitted `118`. That is fixed at the source instead: `order-svc/src/db/pool.ts` registers a NUMERIC type parser, so every money field that service reads is a number, and the outbox event is built from that value. A schema accepting both shapes had been hiding the missing parser.
+- The decimal-scale assertion (`"49.901"` rejected) went with the string branch. Scale is governed by `DECIMAL(12,2)` at the source; a number carries no observable scale to re-check on the wire.
+- **Unchanged, and deliberately:** the `price`/`effectivePrice` unions on `productImportedPayloadSchema` and `productVariantRefSchema`. Their producer is catalog-svc's importer, which passes an external CSV/JSON cell through as read; narrowing those is a catalog-svc task, not this one.
+
+**Classification.** VERSIONING.md lists "change a field's type or meaning" under MAJOR, and by the letter this is MAJOR. It is shipped as 1.10.0 because the evidence says no consumer can observe a difference: `refundAmount` has exactly one producer (order-svc, which emitted a number from the moment its DB boundary was fixed and never emitted a string outside tests) and no consumer reads the field at all — the only subscriber to `order.status.updated` is notify-svc, which does not exist yet. A 2.0.0 would have cost more than the change is worth: 2.0.0 is reserved for the envelope cutover, and `@ecom/messaging` 0.3.0 pins its peer range at `>=1.9.0 <2`, so a major here would force a messaging re-release and a re-pin of every service for a field nothing consumes. **If a producer is ever found emitting a string refund amount, this release must be treated as a breaking one and re-issued as 2.0.0.**
+
+**Adoption ordering.** The narrowing is stricter than what it replaces, so a consumer that repins to 1.10.0 while a producer still sends `"118.00"` would dead-letter that record. Only order-svc validates `order.status.updated`, and it is repinned in the same change as its producer fix; the other services may stay on their current pins because no payload they validate changed.
+
 ## 1.9.0 — 2026-10-31
 
 Product variants on the import event (MINOR release; see the adoption ordering

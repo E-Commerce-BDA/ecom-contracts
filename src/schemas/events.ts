@@ -182,14 +182,13 @@ export const orderStatusSchema = z.enum([
 ]);
 
 /**
- * Money crossing a `DECIMAL` boundary arrives as a string from `pg` and as a
- * number from a JavaScript producer. Both are accepted; formatting is the
- * consumer's job.
+ * Money on the wire is a number. A service that stores an amount in a
+ * `DECIMAL` column parses it back to a number at its own persistence boundary
+ * (see `order-svc/src/db/pool.ts`), so a string never reaches an event; the
+ * union this schema used to carry accepted the driver's default text output and
+ * so hid the missing parser. Formatting is still the consumer's job.
  */
-const moneySchema = z.union([
-  z.number().nonnegative(),
-  z.string().regex(/^\d+(?:\.\d{1,2})?$/, "must be a decimal amount"),
-]);
+const moneySchema = z.number().nonnegative();
 
 /**
  * PII minimization: the payload carries the id only. notify-svc resolves the
