@@ -14,6 +14,7 @@ export * from "./schemas/media.js";
 export * from "./schemas/events.js";
 export * from "./schemas/topics.js";
 export * from "./schemas/jobs.js";
+export * from "./schemas/tasks.js";
 export * from "./schemas/queues.js";
 export * from "./schemas/search.js";
 export * from "./schemas/catalog.js";

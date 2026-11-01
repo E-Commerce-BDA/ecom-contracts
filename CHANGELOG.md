@@ -2,6 +2,40 @@
 
 All notable contract changes are recorded here.
 
+## 1.11.0 — 2026-11-02
+
+The SQS task envelope (MINOR release, backwards compatible with 1.10.0).
+
+- Added `src/schemas/tasks.ts`: `taskMessageSchema` (`id`, `queue`, `type`,
+  `idempotencyKey`, `enqueuedAt`, `payload`) and the `TaskMessage` type.
+- Added `taskMessageFor(payloadSchema)`, which narrows the envelope to one job
+  type so a worker validates the envelope and the job with a single parse.
+- Nothing consumes it yet, so the release cannot break anyone: no producer emits
+  a `TaskMessage` until `@ecom/messaging` 0.4.0 ships the client and cms-svc
+  adopts it.
+
+**Why an envelope at all.** `TASK_QUEUES` names the queue and `jobs.ts` types the
+payload, but neither says *which* enqueue a delivery is. Without that, an
+at-least-once redelivery and a genuine second request are indistinguishable, so
+`cms-006`'s acceptance ("a re-delivered job writes identical values") could not
+be met from the payload alone. `id` identifies the enqueue and `idempotencyKey`
+identifies the effect.
+
+**Why not SQS's own dedupe.** A `MessageDeduplicationId` exists only on FIFO
+queues; the three queues are standard, and the id is not carried onto the DLQ,
+so the key has to live in the body where a redrive preserves it.
+
+**Why `payload: z.unknown()`.** The envelope validates the envelope. A worker
+composes it with its own job schema via `taskMessageFor` (or parses the payload
+separately), which is what keeps one queue from being validated against another
+queue's job type.
+
+**Why `type` stays a string.** `TASK_QUEUES` has no type registry, and inventing
+a second closed union that must be kept in step with the first would be a new
+failure mode. The dotted form (`media.resize-image`) is documented in the schema
+and pinned by `test/tasks.spec.ts`; a queue that grows a second job type needs a
+registry, and that is the release to add it.
+
 ## 1.10.0 — 2026-11-01
 
 `refundAmount` is one wire type (released as MINOR; the classification is argued below).
