@@ -63,7 +63,7 @@ export const SECTION_CATALOG = {
     label: "Hero",
     description:
       "Primary split hero with ordered slides, per-slide layout, and 0-3 CTAs per slide.",
-    allowedSettings: ["bgColor", "blendMode", "ratio", "customRatio"],
+    allowedSettings: ["bgColor", "blendMode", "ratio", "customRatio", "height"],
     contentSchema: sectionContentByType.hero,
     settingsSchema: sectionSettingsByType.hero,
     admin: SECTION_ADMIN_RULES,
@@ -82,7 +82,7 @@ export const SECTION_CATALOG = {
     type: "featured_products",
     label: "Featured products",
     description:
-      "Ordered manual product picker rendered as a grid or carousel. Category-driven selection is deferred.",
+      "Product collection: manual ordered picker or newest arrivals, rendered as a grid or carousel.",
     allowedSettings: [
       "bgColor",
       "blendMode",
@@ -118,8 +118,17 @@ export const SECTION_CATALOG = {
     type: "brand_strip",
     label: "Brand strip",
     description:
-      "Logo row. Empty brandIds means active brands with logos, capped by maxItems; supplied ids pin order.",
-    allowedSettings: ["bgColor", "blendMode", "gutter", "maxItems"],
+      "Logo row. Empty brandIds means active brands with logos, capped by maxItems; items pin the order and may carry a label beside each logo.",
+    allowedSettings: [
+      "bgColor",
+      "blendMode",
+      "gutter",
+      "maxItems",
+      "motion",
+      "speed",
+      "direction",
+      "pauseOnHover",
+    ],
     contentSchema: sectionContentByType.brand_strip,
     settingsSchema: sectionSettingsByType.brand_strip,
     admin: SECTION_ADMIN_RULES,
@@ -138,8 +147,16 @@ export const SECTION_CATALOG = {
     type: "testimonial",
     label: "Testimonial",
     description:
-      "CMS-managed quote cards. Optional in v1; hidden when empty.",
-    allowedSettings: ["bgColor", "blendMode", "gutter", "maxItems"],
+      "CMS-managed quote cards with optional rating, verified flag and date. Hidden when empty.",
+    allowedSettings: [
+      "bgColor",
+      "blendMode",
+      "gutter",
+      "maxItems",
+      "layout",
+      "speed",
+      "pauseOnHover",
+    ],
     contentSchema: sectionContentByType.testimonial,
     settingsSchema: sectionSettingsByType.testimonial,
     admin: SECTION_ADMIN_RULES,

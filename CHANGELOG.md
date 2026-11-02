@@ -2,6 +2,38 @@
 
 All notable contract changes are recorded here.
 
+## 1.12.0 — 2026-11-02
+
+The CMS homepage wave: section field extensions and the footer document
+(MINOR release, backwards compatible with 1.11.0).
+
+- `section-settings.ts`: `heroSettingsSchema` gains `height: "auto" |
+  "viewport"`; `brandStripSettingsSchema` gains `motion: "static" | "marquee"`,
+  `speed` (20–200 px/s), `direction: "left" | "right"`, `pauseOnHover`;
+  `testimonialSettingsSchema` gains `layout: "grid" | "marquee"`, `speed`,
+  `pauseOnHover`. All six keys join `SECTION_SETTING_KEYS` and the matching
+  `SECTION_CATALOG.allowedSettings` rows.
+- `section-content.ts`: `featuredProductsContentSchema` gains
+  `source: "manual" | "newest"` (absent means manual — every 1.11 payload stays
+  valid); `brandStripContentSchema` gains ordered `items: [{ brandId, label? }]`
+  where `label` renders beside the logo (`brandIds` stays for logos-only
+  selection); `testimonialItemSchema` gains `rating` (1–5), `verified`, `date`.
+- Added `src/schemas/footer.ts`: `footerSchema` (columns, social, legal,
+  contact, logo/wordmark/tagline/copyright, `paymentIcons` as platform keys
+  only), `footerResponseSchema { footer, version }`, `updateFooterSchema`,
+  `FOOTER_LIMITS`. Hrefs are internal paths or http(s) URLs at the contract
+  boundary — the renderer puts them straight into `href`, so `//host`, `data:`
+  and `javascript:` are refused here, not at paint time.
+
+**Why extensions rather than new section types.** The existing types already
+own content and ordering, so the admin surface and the renderer registry stay
+small. "Most Popular" is `featured_products source:"manual"`; a computed
+popularity would need a catalog metrics table and is deliberately not faked.
+
+**Why a separate footer module.** The footer is global link structure — not
+theme, not navbar — and a whole-document PUT means one partial edit can never
+risk another concern.
+
 ## 1.11.0 — 2026-11-02
 
 The SQS task envelope (MINOR release, backwards compatible with 1.10.0).

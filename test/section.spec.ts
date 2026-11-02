@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   SECTION_CATALOG,
+  SECTION_SETTING_KEYS,
   SECTION_TYPES,
   sectionListResponseSchema,
   sectionReorderSchema,
@@ -304,5 +305,201 @@ describe("sectionReorderSchema", () => {
       orderedKeys: ["home-hero", "home-banner"],
     });
     expect(result.success).toBe(true);
+  });
+});
+
+/**
+ * 1.12.0 field extensions. Every case here must keep the 1.11 payloads above
+ * valid — this is a MINOR release, so absent keys mean the old behaviour.
+ */
+describe("sectionSchema 1.12 extensions", () => {
+  it("accepts hero height and refuses values outside the enum", () => {
+    expect(
+      sectionSchema.safeParse({
+        ...HERO,
+        settings: { ratio: "16:9", height: "viewport" },
+      }).success,
+    ).toBe(true);
+    expect(
+      sectionSchema.safeParse({ ...HERO, settings: { height: "tall" } }).success,
+    ).toBe(false);
+  });
+
+  it("keeps source absent meaning manual for featured products", () => {
+    const legacy = {
+      ...HERO,
+      key: "home-featured",
+      type: "featured_products",
+      content: {
+        productIds: ["11111111-1111-4111-8111-111111111111"],
+      },
+    };
+    expect(sectionSchema.safeParse(legacy).success).toBe(true);
+
+    const newest = {
+      ...HERO,
+      key: "home-featured",
+      type: "featured_products",
+      content: { source: "newest" },
+      settings: { maxItems: 8 },
+    };
+    expect(sectionSchema.safeParse(newest).success).toBe(true);
+
+    const fakeMetric = {
+      ...HERO,
+      key: "home-featured",
+      type: "featured_products",
+      content: { source: "popular" },
+    };
+    expect(sectionSchema.safeParse(fakeMetric).success).toBe(false);
+  });
+
+  it("accepts brand_strip marquee settings and rejects out-of-band speed", () => {
+    expect(
+      sectionSchema.safeParse({
+        ...HERO,
+        key: "home-brands",
+        type: "brand_strip",
+        content: { brandIds: [] },
+        settings: {
+          motion: "marquee",
+          speed: 60,
+          direction: "left",
+          pauseOnHover: true,
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      sectionSchema.safeParse({
+        ...HERO,
+        key: "home-brands",
+        type: "brand_strip",
+        content: {},
+        settings: { motion: "marquee", speed: 10 },
+      }).success,
+    ).toBe(false);
+    expect(
+      sectionSchema.safeParse({
+        ...HERO,
+        key: "home-brands",
+        type: "brand_strip",
+        content: {},
+        settings: { motion: "carousel" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts labelled brand items and rejects unknown item keys", () => {
+    const result = sectionSchema.safeParse({
+      ...HERO,
+      key: "home-brands",
+      type: "brand_strip",
+      settings: { maxItems: 12 },
+      content: {
+        items: [
+          { brandId: "33333333-3333-4333-8333-333333333333", label: "Northwind" },
+          { brandId: "44444444-4444-4444-8444-444444444444" },
+        ],
+      },
+    });
+    expect(result.success).toBe(true);
+
+    const smuggled = sectionSchema.safeParse({
+      ...HERO,
+      key: "home-brands",
+      type: "brand_strip",
+      settings: { maxItems: 12 },
+      content: {
+        items: [
+          {
+            brandId: "33333333-3333-4333-8333-333333333333",
+            href: "https://evil.example",
+          },
+        ],
+      },
+    });
+    expect(smuggled.success).toBe(false);
+  });
+
+  it("accepts testimonial rating/verified/date and grid/marquee layout", () => {
+    expect(
+      sectionSchema.safeParse({
+        ...HERO,
+        key: "home-testimonials",
+        type: "testimonial",
+        content: {
+          items: [
+            {
+              id: "quote_01",
+              quote: "Great quality.",
+              name: "A. Buyer",
+              rating: 5,
+              verified: true,
+              date: "2026-10-01",
+            },
+          ],
+        },
+        settings: { layout: "marquee", speed: 40, pauseOnHover: true },
+      }).success,
+    ).toBe(true);
+    expect(
+      sectionSchema.safeParse({
+        ...HERO,
+        key: "home-testimonials",
+        type: "testimonial",
+        settings: { maxItems: 6 },
+        content: {
+          items: [
+            { id: "q", quote: "x", name: "n", rating: 6 },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      sectionSchema.safeParse({
+        ...HERO,
+        key: "home-testimonials",
+        type: "testimonial",
+        content: { items: [] },
+        settings: { layout: "carousel" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("refuses motion settings on a type that does not expose them", () => {
+    const result = sectionSchema.safeParse({
+      ...HERO,
+      settings: { ratio: "16:9", motion: "marquee" },
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("SECTION_CATALOG 1.12 rows", () => {
+  it("exposes the new keys only on the types that render them", () => {
+    expect(SECTION_CATALOG.hero.allowedSettings).toContain("height");
+    expect(SECTION_CATALOG.brand_strip.allowedSettings).toEqual(
+      expect.arrayContaining([
+        "motion",
+        "speed",
+        "direction",
+        "pauseOnHover",
+      ]),
+    );
+    expect(SECTION_CATALOG.testimonial.allowedSettings).toEqual(
+      expect.arrayContaining(["layout", "speed", "pauseOnHover"]),
+    );
+    expect(SECTION_CATALOG.featured_products.allowedSettings).not.toContain(
+      "motion",
+    );
+    expect(SECTION_CATALOG.blog_teaser.allowedSettings).not.toContain("speed");
+  });
+
+  it("keeps every allowedSettings entry inside SECTION_SETTING_KEYS", () => {
+    for (const type of SECTION_TYPES) {
+      for (const key of SECTION_CATALOG[type].allowedSettings) {
+        expect(SECTION_SETTING_KEYS).toContain(key);
+      }
+    }
   });
 });

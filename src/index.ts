@@ -7,6 +7,7 @@ export * from "./schemas/section-catalog.js";
 export * from "./schemas/section.js";
 export * from "./schemas/theme.js";
 export * from "./schemas/navigation.js";
+export * from "./schemas/footer.js";
 export * from "./schemas/page-settings.js";
 export * from "./schemas/pages.js";
 export * from "./schemas/blogs.js";

@@ -3,6 +3,7 @@ import { ctasSchema } from "./cta.js";
 import {
   hexColorSchema,
   imageRefSchema,
+  isoDateSchema,
   stableIdSchema,
   uuidSchema,
 } from "./common.js";
@@ -53,12 +54,14 @@ export const bannerContentSchema = z
   .strict();
 
 /**
- * v1 product selection is manual and ordered. Category-driven selection is
- * intentionally deferred; the admin picks product ids explicitly.
+ * v1 product selection is manual and ordered, or "newest" — the server's
+ * newest active products capped by settings.maxItems. The admin picks product
+ * ids explicitly for manual mode; there is no popularity metric.
  */
 export const featuredProductsContentSchema = z
   .object({
     title: sectionTitleSchema.optional(),
+    source: z.enum(["manual", "newest"]).optional(),
     productIds: z.array(uuidSchema).max(24).optional(),
     layout: z.enum(["grid", "carousel"]).optional(),
   })
@@ -74,11 +77,24 @@ export const categoryShowcaseContentSchema = z
 /**
  * Empty brandIds means "active brands with logos", capped by settings.maxItems.
  * Supplying ids pins the order.
+ *
+ * `items` is the ordered selection with an optional label rendered beside the
+ * logo — that is the admin's per-brand "show the name" switch. When `items`
+ * is present it wins over `brandIds`; a label-only mismatch never 404s the
+ * strip, the renderer skips brand ids the catalog does not return.
  */
+export const brandStripItemSchema = z
+  .object({
+    brandId: uuidSchema,
+    label: z.string().trim().max(60).optional(),
+  })
+  .strict();
+
 export const brandStripContentSchema = z
   .object({
     title: sectionTitleSchema.optional(),
     brandIds: z.array(uuidSchema).max(24).optional(),
+    items: z.array(brandStripItemSchema).max(24).optional(),
   })
   .strict();
 
@@ -101,6 +117,9 @@ export const testimonialItemSchema = z
     name: z.string().trim().min(1).max(80),
     role: z.string().trim().max(80).optional(),
     avatar: imageRefSchema.optional(),
+    rating: z.number().int().min(1).max(5).optional(),
+    verified: z.boolean().optional(),
+    date: isoDateSchema.optional(),
   })
   .strict();
 
@@ -130,5 +149,6 @@ export type CategoryShowcaseContent = z.infer<
   typeof categoryShowcaseContentSchema
 >;
 export type BrandStripContent = z.infer<typeof brandStripContentSchema>;
+export type BrandStripItem = z.infer<typeof brandStripItemSchema>;
 export type BlogTeaserContent = z.infer<typeof blogTeaserContentSchema>;
 export type TestimonialContent = z.infer<typeof testimonialContentSchema>;
