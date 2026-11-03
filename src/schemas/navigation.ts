@@ -132,12 +132,20 @@ export const navAccountSchema = z
   })
   .strict();
 
+export const navCartDrawerActionsSchema = z
+  .object({
+    showViewCart: z.boolean().optional(),
+    showCheckout: z.boolean().optional(),
+  })
+  .strict();
+
 export const navCartSchema = z
   .object({
     enabled: z.boolean().optional(),
     destination: cartDestinationSchema.optional(),
     dedicatedPage: z.boolean().optional(),
     badgeCap: z.number().int().min(1).max(99).optional(),
+    drawerActions: navCartDrawerActionsSchema.optional(),
   })
   .strict();
 
@@ -209,6 +217,7 @@ export type NavLinksField = z.infer<typeof navLinksSchema>;
 export type NavSearchField = z.infer<typeof navSearchSchema>;
 export type NavAccountField = z.infer<typeof navAccountSchema>;
 export type NavCartField = z.infer<typeof navCartSchema>;
+export type NavCartDrawerActions = z.infer<typeof navCartDrawerActionsSchema>;
 export type NavAnnouncementField = z.infer<typeof navAnnouncementSchema>;
 export type NavMobileField = z.infer<typeof navMobileSchema>;
 export type NavPageOverrides = z.infer<typeof navPageOverridesSchema>;
