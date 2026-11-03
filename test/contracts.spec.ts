@@ -28,6 +28,8 @@ import {
   productBadgeItemSchema,
   productCardOptionSchema,
   productCardSettingsSchema,
+  navCartSchema,
+  reindexSearchDocumentsSchema,
 } from "../src/index.js";
 
 describe("Theme schemas", () => {
@@ -485,5 +487,49 @@ describe("Event envelope 1.3.0", () => {
   it("rejects unknown fields", () => {
     const envelope = { ...base, type: "order.created", extra: true };
     expect(eventEnvelopeSchema.safeParse(envelope).success).toBe(false);
+  });
+
+  it("accepts navCartSchema with drawerActions", () => {
+    const valid = {
+      enabled: true,
+      destination: "drawer",
+      drawerActions: {
+        showViewCart: true,
+        showCheckout: false,
+      },
+    };
+    const parsed = navCartSchema.safeParse(valid);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.drawerActions?.showCheckout).toBe(false);
+    }
+  });
+
+  it("rejects unknown fields in navCartSchema.drawerActions", () => {
+    const invalid = {
+      enabled: true,
+      drawerActions: {
+        showViewCart: true,
+        unknownField: true,
+      },
+    };
+    expect(navCartSchema.safeParse(invalid).success).toBe(false);
+  });
+
+  it("accepts reindexSearchDocumentsSchema with valid documents", () => {
+    const payload = {
+      documents: [
+        {
+          id: "prod-1",
+          documentType: "product",
+          title: "Chunky Wool Throw",
+          slug: "chunky-wool-throw",
+          content: "Warm chunky knit throw blanket.",
+          status: "active",
+          sourceUpdatedAt: "2026-11-03T00:00:00.000Z",
+        },
+      ],
+    };
+    expect(reindexSearchDocumentsSchema.safeParse(payload).success).toBe(true);
   });
 });
