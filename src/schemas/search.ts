@@ -126,6 +126,19 @@ export const ingestSearchDocumentsResponseSchema = z
   })
   .strict();
 
+export const reindexSearchDocumentsSchema = z
+  .object({
+    documents: z.array(searchDocumentSchema),
+  })
+  .strict();
+
+export const reindexSearchDocumentsResponseSchema = z
+  .object({
+    indexed: z.number().int().nonnegative(),
+    removed: z.number().int().nonnegative(),
+  })
+  .strict();
+
 export const searchStatsSchema = z
   .object({
     documents: z.number().int().nonnegative(),
@@ -158,6 +171,12 @@ export type IngestSearchDocumentsPayload = z.infer<
 >;
 export type IngestSearchDocumentsResponse = z.infer<
   typeof ingestSearchDocumentsResponseSchema
+>;
+export type ReindexSearchDocumentsPayload = z.infer<
+  typeof reindexSearchDocumentsSchema
+>;
+export type ReindexSearchDocumentsResponse = z.infer<
+  typeof reindexSearchDocumentsResponseSchema
 >;
 export type SearchStats = z.infer<typeof searchStatsSchema>;
 
