@@ -75,7 +75,7 @@ export const categoryShowcaseContentSchema = z
   .strict();
 
 /**
- * Empty brandIds means "active brands with logos", capped by settings.maxItems.
+ * Empty brandIds means "active brands in sort order", capped by settings.maxItems.
  * Supplying ids pins the order.
  *
  * `items` is the ordered selection with an optional label rendered beside the

@@ -118,7 +118,7 @@ export const SECTION_CATALOG = {
     type: "brand_strip",
     label: "Brand strip",
     description:
-      "Logo row. Empty brandIds means active brands with logos, capped by maxItems; items pin the order and may carry a label beside each logo.",
+      "Logo row. Empty brandIds means active brands in sort order, capped by maxItems; items pin the order and may carry a label beside each logo. A brand with no logo still shows its name.",
     allowedSettings: [
       "bgColor",
       "blendMode",
