@@ -597,6 +597,24 @@ describe("PDP sections 1.14", () => {
         },
       }).success,
     ).toBe(false);
+    // brand source is a valid non-manual source, but still forbids ids.
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_related",
+        content: { source: "brand", layout: "grid" },
+      }).success,
+    ).toBe(true);
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_related",
+        content: {
+          source: "brand",
+          productIds: ["00000000-0000-4000-8000-0000000000c1"],
+        },
+      }).success,
+    ).toBe(false);
   });
 
   it("requires a story body or image and at least one faq item", () => {

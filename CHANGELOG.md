@@ -2,6 +2,18 @@
 
 All notable contract changes are recorded here.
 
+## 1.16.0 — 2026-11-17
+
+PDP depth (MINOR release, backwards compatible with 1.15.0).
+
+- `pdpRelatedContentSchema.source` gains `"brand"`: related products can come
+  from the product's brand as well as its category or a manual id list. The
+  existing refinement still forbids `productIds` for non-manual sources.
+- Added `themePhotoSettingsSchema` and an optional `photoSettings` layer on
+  `themeSettingsSchema`: the global face of product > section > global PDP
+  photo precedence, with clamped ratio/gutter/widthPercent and a closed
+  format/layout/blend vocabulary.
+
 ## 1.15.0 — 2026-11-13
 
 Catalog listing query slice (MINOR release, backwards compatible with 1.14.0).

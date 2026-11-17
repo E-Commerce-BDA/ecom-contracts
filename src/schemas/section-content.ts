@@ -168,7 +168,7 @@ export const pdpReviewsContentSchema = z
 export const pdpRelatedContentSchema = z
   .object({
     title: sectionTitleSchema.optional(),
-    source: z.enum(["category", "manual"]).optional(),
+    source: z.enum(["category", "brand", "manual"]).optional(),
     productIds: z.array(uuidSchema).max(24).optional(),
     layout: z.enum(["grid", "carousel"]).optional(),
   })

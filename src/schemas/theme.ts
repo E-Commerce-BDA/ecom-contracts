@@ -183,6 +183,25 @@ export const themeProductCardSchema = z
   })
   .strict();
 
+/**
+ * PDP photo settings — the global layer of product > section > global
+ * precedence (product.md §7.6, admin §4.4). Every value is optional and
+ * clamped; an absent key inherits the builtin. `ratio: "custom"` is the only
+ * case where `customRatio` applies.
+ */
+export const themePhotoSettingsSchema = z
+  .object({
+    format: z.enum(["horizontal", "vertical"]).optional(),
+    ratio: z.enum(["1:1", "4:3", "4:5", "3:4", "16:9", "custom"]).optional(),
+    customRatio: z.number().min(0.5).max(2.5).optional(),
+    layout: z.enum(["grid", "carousel"]).optional(),
+    gutter: z.number().int().min(0).max(48).optional(),
+    widthPercent: z.number().int().min(25).max(100).optional(),
+    blendMode: z.enum(["multiply", "normal"]).optional(),
+    showPhotos: z.boolean().optional(),
+  })
+  .strict();
+
 export const themeSettingsSchema = z
   .object({
     button: themeButtonSchema.optional(),
@@ -196,6 +215,7 @@ export const themeSettingsSchema = z
     tooltip: themeTooltipSchema.optional(),
     dialog: themeDialogSchema.optional(),
     productCard: themeProductCardSchema.optional(),
+    photoSettings: themePhotoSettingsSchema.optional(),
   })
   .strict();
 
@@ -218,5 +238,6 @@ export type ThemeSelectField = z.infer<typeof themeSelectSchema>;
 export type ThemeTooltipField = z.infer<typeof themeTooltipSchema>;
 export type ThemeDialogField = z.infer<typeof themeDialogSchema>;
 export type ThemeProductCardField = z.infer<typeof themeProductCardSchema>;
+export type ThemePhotoSettingsField = z.infer<typeof themePhotoSettingsSchema>;
 export type ThemeSettings = z.infer<typeof themeSettingsSchema>;
 export type ThemeResponse = z.infer<typeof themeResponseSchema>;

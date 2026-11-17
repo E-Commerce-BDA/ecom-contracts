@@ -22,6 +22,7 @@ import {
   themeResponseSchema,
   themeSettingsSchema,
   themeProductCardSchema,
+  themePhotoSettingsSchema,
   badgeSchema,
   createBadgeSchema,
   productBadgeAssignmentSchema,
@@ -66,6 +67,27 @@ describe("Theme schemas", () => {
       button: { unknownField: true },
     });
     expect(res.success).toBe(false);
+  });
+
+  it("parses and clamps theme photoSettings", () => {
+    expect(
+      themePhotoSettingsSchema.safeParse({
+        format: "horizontal",
+        ratio: "4:5",
+        customRatio: 1.2,
+        layout: "grid",
+        gutter: 8,
+        widthPercent: 100,
+        blendMode: "normal",
+        showPhotos: true,
+      }).success,
+    ).toBe(true);
+    expect(themePhotoSettingsSchema.safeParse({ gutter: 49 }).success).toBe(false);
+    expect(themePhotoSettingsSchema.safeParse({ widthPercent: 10 }).success).toBe(false);
+    expect(themePhotoSettingsSchema.safeParse({ ratio: "2:1" }).success).toBe(false);
+    expect(
+      themeSettingsSchema.safeParse({ photoSettings: { layout: "carousel" } }).success,
+    ).toBe(true);
   });
 
   it("parses valid themeProductCard in themeSettingsSchema", () => {

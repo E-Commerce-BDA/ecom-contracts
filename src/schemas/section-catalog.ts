@@ -216,7 +216,7 @@ export const SECTION_CATALOG = {
     group: "pdp",
     label: "Related products",
     description:
-      "Related products. Category source uses the product's category and excludes the current product; manual source pins ordered product ids.",
+      "Related products. Category/brand sources use the product's category or brand and exclude the current product; manual source pins ordered product ids.",
     allowedSettings: [
       "bgColor",
       "blendMode",
