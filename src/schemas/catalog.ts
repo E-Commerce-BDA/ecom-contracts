@@ -112,3 +112,36 @@ export type ProductCardOptionValue = z.infer<typeof productCardOptionValueSchema
 export type ProductCardOption = z.infer<typeof productCardOptionSchema>;
 export type CardVariant = z.infer<typeof cardVariantSchema>;
 export type ProductCardSettings = z.infer<typeof productCardSettingsSchema>;
+
+/* ── listing query (1.15.0) ──────────────────────────────────────────────
+ * The storefront listing and catalog-svc's ProductQueryDto share this shape.
+ * catalog-svc keeps its class-validator DTO, but the two must accept the same
+ * values; this schema is the versioned source of truth. */
+
+export const catalogProductSortSchema = z.enum([
+  "created_desc",
+  "price_asc",
+  "price_desc",
+  "name_asc",
+  "rating_desc",
+  "popularity_desc",
+]);
+
+export const catalogProductQuerySchema = z
+  .object({
+    limit: z.number().int().min(1).max(100).optional(),
+    cursor: z.string().min(1).max(200).optional(),
+    categoryId: uuidSchema.optional(),
+    brandId: uuidSchema.optional(),
+    q: z.string().trim().min(1).max(200).optional(),
+    sort: catalogProductSortSchema.optional(),
+    minPrice: z.number().min(0).optional(),
+    maxPrice: z.number().min(0).optional(),
+    tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
+    discounted: z.boolean().optional(),
+    ids: z.array(uuidSchema).max(24).optional(),
+  })
+  .strict();
+
+export type CatalogProductSort = z.infer<typeof catalogProductSortSchema>;
+export type CatalogProductQuery = z.infer<typeof catalogProductQuerySchema>;

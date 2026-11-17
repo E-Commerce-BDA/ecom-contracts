@@ -2,6 +2,17 @@
 
 All notable contract changes are recorded here.
 
+## 1.15.0 — 2026-11-13
+
+Catalog listing query slice (MINOR release, backwards compatible with 1.14.0).
+
+- Added `catalogProductSortSchema` with `rating_desc` and `popularity_desc`
+  alongside the existing `created_desc`, `price_asc`, `price_desc`, `name_asc`.
+- Added `catalogProductQuerySchema`: `tags` (AND semantics, max 10),
+  `discounted`, `minPrice`/`maxPrice`, `q`, `cursor`, `limit`, `ids`, and the
+  six sort values. This is the shared shape for the storefront listing and
+  catalog-svc's `ProductQueryDto`.
+
 ## 1.14.0 — 2026-11-08
 
 Per-product PDP sections (MINOR release, backwards compatible with 1.13.0).

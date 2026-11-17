@@ -28,6 +28,8 @@ import {
   productBadgeItemSchema,
   productCardOptionSchema,
   productCardSettingsSchema,
+  catalogProductQuerySchema,
+  catalogProductSortSchema,
   navCartSchema,
   reindexSearchDocumentsSchema,
 } from "../src/index.js";
@@ -145,6 +147,50 @@ describe("Catalog & ProductCard schemas", () => {
       values: [{ value: "S" }, { value: "M" }, { value: "L" }],
     });
     expect(sizeOption.success).toBe(true);
+  });
+});
+
+describe("Catalog product query schemas (1.15.0)", () => {
+  it("accepts every advertised sort", () => {
+    for (const sort of catalogProductSortSchema.options) {
+      expect(catalogProductQuerySchema.safeParse({ sort }).success).toBe(true);
+    }
+  });
+
+  it("rejects an unknown sort", () => {
+    expect(catalogProductQuerySchema.safeParse({ sort: "relevance" }).success).toBe(
+      false,
+    );
+  });
+
+  it("accepts tags, discounted, price range and pagination", () => {
+    const result = catalogProductQuerySchema.safeParse({
+      tags: ["linen", "summer"],
+      discounted: true,
+      minPrice: 10,
+      maxPrice: 100,
+      limit: 24,
+      cursor: "2026-01-01T00:00:00.000Z|00000000-0000-4000-8000-000000000001",
+      categoryId: "00000000-0000-4000-8000-000000000001",
+      brandId: "00000000-0000-4000-8000-000000000002",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects malformed tags, limits and ids", () => {
+    expect(
+      catalogProductQuerySchema.safeParse({ tags: Array.from({ length: 11 }, () => "x") })
+        .success,
+    ).toBe(false);
+    expect(catalogProductQuerySchema.safeParse({ tags: [""] }).success).toBe(false);
+    expect(catalogProductQuerySchema.safeParse({ tags: ["a".repeat(51)] }).success).toBe(
+      false,
+    );
+    expect(catalogProductQuerySchema.safeParse({ limit: 0 }).success).toBe(false);
+    expect(catalogProductQuerySchema.safeParse({ limit: 101 }).success).toBe(false);
+    expect(
+      catalogProductQuerySchema.safeParse({ categoryId: "not-a-uuid" }).success,
+    ).toBe(false);
   });
 });
 
