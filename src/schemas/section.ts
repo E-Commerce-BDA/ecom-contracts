@@ -11,6 +11,13 @@ import {
   categoryShowcaseContentSchema,
   featuredProductsContentSchema,
   heroContentSchema,
+  pdpDescriptionContentSchema,
+  pdpDetailsContentSchema,
+  pdpFaqContentSchema,
+  pdpRelatedContentSchema,
+  pdpReviewsContentSchema,
+  pdpStoryContentSchema,
+  pdpTrustContentSchema,
   testimonialContentSchema,
 } from "./section-content.js";
 import {
@@ -20,6 +27,13 @@ import {
   categoryShowcaseSettingsSchema,
   featuredProductsSettingsSchema,
   heroSettingsSchema,
+  pdpDescriptionSettingsSchema,
+  pdpDetailsSettingsSchema,
+  pdpFaqSettingsSchema,
+  pdpRelatedSettingsSchema,
+  pdpReviewsSettingsSchema,
+  pdpStorySettingsSchema,
+  pdpTrustSettingsSchema,
   testimonialSettingsSchema,
 } from "./section-settings.js";
 
@@ -87,6 +101,55 @@ export const sectionSchema = z.discriminatedUnion("type", [
       settings: testimonialSettingsSchema.optional(),
     })
     .strict(),
+  sectionBase
+    .extend({
+      type: z.literal("pdp_description"),
+      content: pdpDescriptionContentSchema,
+      settings: pdpDescriptionSettingsSchema.optional(),
+    })
+    .strict(),
+  sectionBase
+    .extend({
+      type: z.literal("pdp_details"),
+      content: pdpDetailsContentSchema,
+      settings: pdpDetailsSettingsSchema.optional(),
+    })
+    .strict(),
+  sectionBase
+    .extend({
+      type: z.literal("pdp_reviews"),
+      content: pdpReviewsContentSchema,
+      settings: pdpReviewsSettingsSchema.optional(),
+    })
+    .strict(),
+  sectionBase
+    .extend({
+      type: z.literal("pdp_related"),
+      content: pdpRelatedContentSchema,
+      settings: pdpRelatedSettingsSchema.optional(),
+    })
+    .strict(),
+  sectionBase
+    .extend({
+      type: z.literal("pdp_trust"),
+      content: pdpTrustContentSchema,
+      settings: pdpTrustSettingsSchema.optional(),
+    })
+    .strict(),
+  sectionBase
+    .extend({
+      type: z.literal("pdp_story"),
+      content: pdpStoryContentSchema,
+      settings: pdpStorySettingsSchema.optional(),
+    })
+    .strict(),
+  sectionBase
+    .extend({
+      type: z.literal("pdp_faq"),
+      content: pdpFaqContentSchema,
+      settings: pdpFaqSettingsSchema.optional(),
+    })
+    .strict(),
 ]);
 
 export const sectionListResponseSchema = z
@@ -95,6 +158,36 @@ export const sectionListResponseSchema = z
     version: versionSchema,
   })
   .strict();
+
+/**
+ * Outer envelope for public section reads. Storefront consumers use this
+ * instead of `sectionListResponseSchema` so a single unknown/invalid
+ * section does not null the entire list: validate the envelope, then run
+ * `sectionSchema.safeParse` per entry and skip only the failures.
+ */
+export const sectionListEnvelopeSchema = z
+  .object({
+    sections: z.array(z.unknown()),
+    version: versionSchema,
+  })
+  .strict();
+
+/**
+ * Clone a section page key into another. Used to materialize `pdp-default`
+ * into each product's `pdp-<id>` page. `replace` is required to overwrite
+ * an already-populated target.
+ */
+export const cloneSectionsSchema = z
+  .object({
+    fromPageKey: pageKeySchema,
+    toPageKey: pageKeySchema,
+    replace: z.boolean().optional(),
+  })
+  .strict()
+  .refine((value) => value.fromPageKey !== value.toPageKey, {
+    path: ["toPageKey"],
+    message: "target page must differ from source",
+  });
 
 export const sectionReorderSchema = z
   .object({
@@ -112,4 +205,6 @@ export const sectionReorderSchema = z
 
 export type Section = z.infer<typeof sectionSchema>;
 export type SectionListResponse = z.infer<typeof sectionListResponseSchema>;
+export type SectionListEnvelope = z.infer<typeof sectionListEnvelopeSchema>;
 export type SectionReorder = z.infer<typeof sectionReorderSchema>;
+export type CloneSections = z.infer<typeof cloneSectionsSchema>;

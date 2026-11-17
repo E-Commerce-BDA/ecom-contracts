@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ctaSchema } from "./cta.js";
 import { imageRefSchema, pageKeySchema, stableIdSchema } from "./common.js";
+import { faqItemSchema } from "./faq.js";
 
 export const richTextBlockSchema = z
   .object({
@@ -26,13 +27,6 @@ export const ctaBlockSchema = z
     id: stableIdSchema,
     title: z.string().max(120),
     ctas: z.array(ctaSchema).max(3),
-  })
-  .strict();
-
-export const faqItemSchema = z
-  .object({
-    question: z.string().min(1).max(240),
-    answer: z.string().min(1).max(5000),
   })
   .strict();
 

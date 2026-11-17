@@ -14,6 +14,13 @@ export const SECTION_TYPES = [
   "brand_strip",
   "blog_teaser",
   "testimonial",
+  "pdp_description",
+  "pdp_details",
+  "pdp_reviews",
+  "pdp_related",
+  "pdp_trust",
+  "pdp_story",
+  "pdp_faq",
 ] as const;
 
 export type SectionType = (typeof SECTION_TYPES)[number];

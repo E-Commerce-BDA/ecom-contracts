@@ -20,6 +20,8 @@ export const SECTION_SETTING_KEYS = [
   "direction",
   "pauseOnHover",
   "layout",
+  "columns",
+  "showIcons",
 ] as const;
 
 export type SectionSettingKey = (typeof SECTION_SETTING_KEYS)[number];
@@ -36,6 +38,11 @@ const brandMotionSchema = z.enum(["static", "marquee"]);
 const marqueeSpeedSchema = z.number().int().min(20).max(200);
 const marqueeDirectionSchema = z.enum(["left", "right"]);
 const testimonialLayoutSchema = z.enum(["grid", "marquee"]);
+const pdpDescriptionLayoutSchema = z.enum(["prose", "wide"]);
+const pdpTrustLayoutSchema = z.enum(["rows", "grid"]);
+const pdpStoryLayoutSchema = z.enum(["text", "image-left", "image-right"]);
+const pdpFaqLayoutSchema = z.enum(["accordion", "list"]);
+const columnsSchema = z.number().int().min(1).max(3);
 
 function hasValidCustomRatio(value: {
   ratio?: string;
@@ -64,6 +71,8 @@ export const sectionSettingsSchema = z
     direction: marqueeDirectionSchema.optional(),
     pauseOnHover: z.boolean().optional(),
     layout: testimonialLayoutSchema.optional(),
+    columns: columnsSchema.optional(),
+    showIcons: z.boolean().optional(),
   })
   .strict()
   .refine(hasValidCustomRatio, customRatioIssue);
@@ -146,6 +155,77 @@ export const testimonialSettingsSchema = z
   })
   .strict();
 
+export const pdpDescriptionSettingsSchema = z
+  .object({
+    bgColor: hexColorSchema.optional(),
+    gutter: gutterSchema.optional(),
+    layout: pdpDescriptionLayoutSchema.optional(),
+  })
+  .strict();
+
+export const pdpDetailsSettingsSchema = z
+  .object({
+    bgColor: hexColorSchema.optional(),
+    gutter: gutterSchema.optional(),
+    columns: columnsSchema.optional(),
+  })
+  .strict();
+
+export const pdpReviewsSettingsSchema = z
+  .object({
+    bgColor: hexColorSchema.optional(),
+    gutter: gutterSchema.optional(),
+    maxItems: maxItemsSchema.optional(),
+    layout: testimonialLayoutSchema.optional(),
+    speed: marqueeSpeedSchema.optional(),
+    pauseOnHover: z.boolean().optional(),
+  })
+  .strict();
+
+export const pdpRelatedSettingsSchema = z
+  .object({
+    bgColor: hexColorSchema.optional(),
+    blendMode: blendModeSchema.optional(),
+    ratio: ratioSchema.optional(),
+    customRatio: customRatioSchema.optional(),
+    gutter: gutterSchema.optional(),
+    showPhotos: z.boolean().optional(),
+    maxItems: maxItemsSchema.optional(),
+  })
+  .strict()
+  .refine(hasValidCustomRatio, customRatioIssue);
+
+export const pdpTrustSettingsSchema = z
+  .object({
+    bgColor: hexColorSchema.optional(),
+    gutter: gutterSchema.optional(),
+    maxItems: maxItemsSchema.optional(),
+    layout: pdpTrustLayoutSchema.optional(),
+    showIcons: z.boolean().optional(),
+  })
+  .strict();
+
+export const pdpStorySettingsSchema = z
+  .object({
+    bgColor: hexColorSchema.optional(),
+    blendMode: blendModeSchema.optional(),
+    ratio: ratioSchema.optional(),
+    customRatio: customRatioSchema.optional(),
+    gutter: gutterSchema.optional(),
+    layout: pdpStoryLayoutSchema.optional(),
+  })
+  .strict()
+  .refine(hasValidCustomRatio, customRatioIssue);
+
+export const pdpFaqSettingsSchema = z
+  .object({
+    bgColor: hexColorSchema.optional(),
+    gutter: gutterSchema.optional(),
+    maxItems: maxItemsSchema.optional(),
+    layout: pdpFaqLayoutSchema.optional(),
+  })
+  .strict();
+
 export const sectionSettingsByType = {
   hero: heroSettingsSchema,
   banner: bannerSettingsSchema,
@@ -154,6 +234,13 @@ export const sectionSettingsByType = {
   brand_strip: brandStripSettingsSchema,
   blog_teaser: blogTeaserSettingsSchema,
   testimonial: testimonialSettingsSchema,
+  pdp_description: pdpDescriptionSettingsSchema,
+  pdp_details: pdpDetailsSettingsSchema,
+  pdp_reviews: pdpReviewsSettingsSchema,
+  pdp_related: pdpRelatedSettingsSchema,
+  pdp_trust: pdpTrustSettingsSchema,
+  pdp_story: pdpStorySettingsSchema,
+  pdp_faq: pdpFaqSettingsSchema,
 } as const;
 
 export type SectionSettings = z.infer<typeof sectionSettingsSchema>;

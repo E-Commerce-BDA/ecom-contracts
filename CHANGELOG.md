@@ -2,6 +2,36 @@
 
 All notable contract changes are recorded here.
 
+## 1.14.0 — 2026-11-08
+
+Per-product PDP sections (MINOR release, backwards compatible with 1.13.0).
+
+- Added seven PDP section types: `pdp_description`, `pdp_details`,
+  `pdp_reviews`, `pdp_related`, `pdp_trust`, `pdp_story`, `pdp_faq`. Catalog
+  remains the default source for description/details; a present CMS value
+  overrides it. Reviews are CMS-authored quotes — no synthetic ratings.
+- `SECTION_CATALOG` entries gain `group: "home" | "pdp"` so the admin editor
+  can filter types by page context.
+- `section-settings.ts` gains `columns` and `showIcons`, plus per-type PDP
+  settings schemas. Settings stay sparse: absent keys inherit, null rejects.
+- Added `sectionListEnvelopeSchema` (outer shape only) so public-read
+  consumers can validate the envelope and skip only invalid/unknown sections,
+  and `cloneSectionsSchema` for `POST /cms/admin/sections/clone`
+  (materializing `pdp-default` into `pdp-<id>`).
+- `pdp_related` refines `source`/`productIds`: manual requires at least one
+  id, category forbids ids. `pdp_trust` icons are a closed enum. `pdp_story`
+  requires a body or an image. `pdp_faq` requires at least one item.
+- Extracted `faqItemSchema` into `src/schemas/faq.ts`, shared by CMS page
+  FAQ blocks and `pdp_faq`. No wire change.
+
+## 1.13.0 — 2026-11-03
+
+Nav cart drawer actions and search reindex schemas (MINOR release).
+
+- `navigation.ts`: `navCartDrawerActionsSchema` and `drawerActions` on
+  `navCartSchema`.
+- `search.ts`: `reindexSearchDocumentsSchema` and response schemas.
+
 ## 1.12.0 — 2026-11-02
 
 The CMS homepage wave: section field extensions and the footer document

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  cloneSectionsSchema,
   SECTION_CATALOG,
   SECTION_SETTING_KEYS,
   SECTION_TYPES,
+  sectionListEnvelopeSchema,
   sectionListResponseSchema,
   sectionReorderSchema,
   sectionSchema,
@@ -501,5 +503,167 @@ describe("SECTION_CATALOG 1.12 rows", () => {
         expect(SECTION_SETTING_KEYS).toContain(key);
       }
     }
+  });
+});
+
+describe("PDP sections 1.14", () => {
+  const base = { key: "pdp-x", pageKey: "pdp-default", sortOrder: 0 } as const;
+
+  it("groups home and pdp types", () => {
+    expect(SECTION_CATALOG.hero.group).toBe("home");
+    expect(SECTION_CATALOG.pdp_description.group).toBe("pdp");
+    expect(SECTION_CATALOG.pdp_faq.group).toBe("pdp");
+  });
+
+  it("accepts every pdp type with minimal content", () => {
+    const cases = [
+      { ...base, type: "pdp_description", content: {} },
+      { ...base, type: "pdp_details", content: {} },
+      {
+        ...base,
+        type: "pdp_reviews",
+        content: {
+          items: [{ id: "r1", quote: "Great", name: "Sam" }],
+        },
+      },
+      {
+        ...base,
+        type: "pdp_related",
+        content: { source: "category", layout: "grid" },
+      },
+      {
+        ...base,
+        type: "pdp_trust",
+        content: {
+          items: [
+            {
+              id: "ship",
+              icon: "truck",
+              title: "Shipping",
+              description: "Free over $50",
+            },
+          ],
+        },
+      },
+      {
+        ...base,
+        type: "pdp_story",
+        content: { body: "<p>Our story</p>" },
+      },
+      {
+        ...base,
+        type: "pdp_faq",
+        content: { items: [{ question: "When?", answer: "Today." }] },
+      },
+    ];
+    for (const value of cases) {
+      expect(sectionSchema.safeParse(value).success).toBe(true);
+    }
+  });
+
+  it("rejects closed-icon violations and related source mistakes", () => {
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_trust",
+        content: {
+          items: [
+            {
+              id: "x",
+              icon: "rocket",
+              title: "Nope",
+              description: "Nope",
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_related",
+        content: { source: "manual" },
+      }).success,
+    ).toBe(false);
+
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_related",
+        content: {
+          source: "category",
+          productIds: ["00000000-0000-4000-8000-0000000000c1"],
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires a story body or image and at least one faq item", () => {
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_story",
+        content: { title: "Story" },
+      }).success,
+    ).toBe(false);
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_faq",
+        content: { items: [] },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("exposes only sparse pdp settings", () => {
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_details",
+        content: {},
+        settings: { columns: 2, gutter: 8 },
+      }).success,
+    ).toBe(true);
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_details",
+        content: {},
+        settings: { ratio: "1:1" },
+      }).success,
+    ).toBe(false);
+    expect(
+      sectionSchema.safeParse({
+        ...base,
+        type: "pdp_trust",
+        content: {},
+        settings: { layout: "grid", showIcons: false },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("tolerates unknown sections in the envelope but rejects them in the strict list", () => {
+    const envelope = {
+      sections: [{ ...base, type: "future_type", content: {} }, { ...base, type: "pdp_details", content: {} }],
+      version: 3,
+    };
+    expect(sectionListEnvelopeSchema.safeParse(envelope).success).toBe(true);
+    expect(sectionListResponseSchema.safeParse(envelope).success).toBe(false);
+  });
+
+  it("validates clone requests", () => {
+    expect(
+      cloneSectionsSchema.safeParse({
+        fromPageKey: "pdp-default",
+        toPageKey: "pdp-00000000-0000-4000-8000-000000000001",
+      }).success,
+    ).toBe(true);
+    expect(
+      cloneSectionsSchema.safeParse({
+        fromPageKey: "pdp-default",
+        toPageKey: "pdp-default",
+      }).success,
+    ).toBe(false);
   });
 });
