@@ -5,13 +5,6 @@ import {
   stableIdSchema,
 } from "./common.js";
 
-/**
- * CTA shape shared by hero slides and banners.
- *
- * CTAs are content, not settings. They do not inherit from global theme at the
- * storage layer; absent style fields are resolved by the storefront renderer.
- * The hard cap is 3 (0 = no CTA row).
- */
 export const ctaSchema = z
   .object({
     id: stableIdSchema,

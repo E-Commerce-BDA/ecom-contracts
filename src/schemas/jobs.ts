@@ -21,7 +21,6 @@ export const resizeImageJobSchema = z
 
 export type ResizeImageJob = z.infer<typeof resizeImageJobSchema>;
 
-/** The three emails v1 sends. One template per job, never a raw body. */
 export const emailTemplateSchema = z.enum([
   "order-confirmation",
   "cart-abandoned",
@@ -60,7 +59,6 @@ export type EmailTemplate = z.infer<typeof emailTemplateSchema>;
 
 export const importSourceSchema = z.enum(["csv", "json"]);
 
-/** `replace` overwrites stock, `add` increments it. */
 export const importStockModeSchema = z.enum(["replace", "add"]);
 
 /** A CSV cell or a JSON scalar: rows arrive untyped and are validated by import-svc. */

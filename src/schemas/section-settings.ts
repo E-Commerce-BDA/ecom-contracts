@@ -33,8 +33,6 @@ const gutterSchema = z.number().int().min(0).max(48);
 const maxItemsSchema = z.number().int().min(1).max(24);
 const heroHeightSchema = z.enum(["auto", "viewport"]);
 const brandMotionSchema = z.enum(["static", "marquee"]);
-/** Scroll velocity in px/second. A track slower than 20 reads as broken and
- * faster than 200 is unreadable; both are guardrails, not product rules. */
 const marqueeSpeedSchema = z.number().int().min(20).max(200);
 const marqueeDirectionSchema = z.enum(["left", "right"]);
 const testimonialLayoutSchema = z.enum(["grid", "marquee"]);

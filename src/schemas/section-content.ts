@@ -75,15 +75,6 @@ export const categoryShowcaseContentSchema = z
   })
   .strict();
 
-/**
- * Empty brandIds means "active brands in sort order", capped by settings.maxItems.
- * Supplying ids pins the order.
- *
- * `items` is the ordered selection with an optional label rendered beside the
- * logo — that is the admin's per-brand "show the name" switch. When `items`
- * is present it wins over `brandIds`; a label-only mismatch never 404s the
- * strip, the renderer skips brand ids the catalog does not return.
- */
 export const brandStripItemSchema = z
   .object({
     brandId: uuidSchema,
@@ -131,11 +122,6 @@ export const testimonialContentSchema = z
   })
   .strict();
 
-/* ── PDP sections (1.14.0) ────────────────────────────────────────────
- * Per-product content, materialized from the `pdp-default` blueprint by
- * `POST /cms/admin/sections/clone`. Catalog data is the default source for
- * description/details; a present CMS value overrides it. Absent means
- * "inherit" everywhere — never expose a second fallback copy here. */
 
 export const pdpDescriptionContentSchema = z
   .object({

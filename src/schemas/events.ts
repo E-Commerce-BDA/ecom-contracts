@@ -4,11 +4,6 @@ import { blogStatusSchema } from "./blogs.js";
 
 const eventIdentifierSchema = z.string().min(1);
 
-/**
- * Wire envelope for 1.3.0. Producers may dual-write `type` with the legacy
- * `topic`/`eventType` fields; consumers normalize with `readEventEnvelope`.
- * `type` is the canonical event name and Kafka topic.
- */
 export const eventEnvelopeSchema = z
   .object({
     id: uuidSchema,
@@ -49,7 +44,6 @@ export const eventEnvelopeSchema = z
     }
   });
 
-/** Canonical 2.0.0-ready envelope. 1.3.0 producers should dual-write this shape. */
 export const canonicalEventEnvelopeSchema = z
   .object({
     id: uuidSchema,
@@ -243,7 +237,6 @@ export const cartUpdatedPayloadSchema = z
   })
   .strict();
 
-/** Target contract: produced by analytics-svc once the abandoned-cart detector lands. */
 export const cartAbandonedPayloadSchema = z
   .object({
     cartId: uuidSchema,
@@ -283,7 +276,6 @@ export const orderStatusUpdatedPayloadSchema = z
   })
   .strict();
 
-/** Target contract: produced by analytics-svc from the `/api/track` beacon. */
 export const pageViewedPayloadSchema = z
   .object({
     sessionId: z.string().min(1).max(64),
@@ -322,15 +314,6 @@ export type OrderStatusUpdatedPayload = z.infer<
 >;
 export type PageViewedPayload = z.infer<typeof pageViewedPayloadSchema>;
 
-/**
- * Normalize a 1.3.0 wire envelope to the canonical shape.
- *
- * - `type` wins; legacy `eventType` then `topic` are fallbacks.
- * - `version` defaults to 1 and `idempotencyKey` defaults to `id`.
- * - The schema rejects dual-write drift when `type` disagrees with a legacy
- *   field, while still accepting legacy CMS envelopes whose transport topic
- *   (`cms.events`) differs from the event name (`cms.updated`).
- */
 export function readEventEnvelope(input: unknown): CanonicalEventEnvelope {
   const envelope = eventEnvelopeSchema.parse(input);
   const type = envelope.type ?? envelope.eventType ?? envelope.topic;

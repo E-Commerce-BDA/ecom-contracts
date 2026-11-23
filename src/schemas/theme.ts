@@ -183,12 +183,6 @@ export const themeProductCardSchema = z
   })
   .strict();
 
-/**
- * PDP photo settings — the global layer of product > section > global
- * precedence (product.md §7.6, admin §4.4). Every value is optional and
- * clamped; an absent key inherits the builtin. `ratio: "custom"` is the only
- * case where `customRatio` applies.
- */
 export const themePhotoSettingsSchema = z
   .object({
     format: z.enum(["horizontal", "vertical"]).optional(),

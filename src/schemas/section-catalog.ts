@@ -6,18 +6,6 @@ import {
 } from "./section-settings.js";
 import type { SectionType } from "./section-types.js";
 
-/**
- * Admin governance for CMS sections.
- *
- * This catalog is the single source of truth for:
- * - which section types exist;
- * - which settings keys each type may override;
- * - which fields the admin may edit;
- * - which fields are server-managed or immutable.
- *
- * The admin UI and cms-svc both consume it. Adding a section type or an
- * editable field is a contracts MINOR release; changing meaning is MAJOR.
- */
 export interface SectionAdminRules {
   readonly create: boolean;
   readonly delete: boolean;

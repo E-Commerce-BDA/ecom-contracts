@@ -22,7 +22,6 @@ import {
 const uuid = (suffix: string) =>
   `00000000-0000-4000-8000-${suffix.padStart(12, "0")}`;
 
-/** Exactly what `buildCartUpdatedEvent` + `toItemDto` put on the wire. */
 const cartItem = {
   id: uuid("101"),
   productId: uuid("201"),

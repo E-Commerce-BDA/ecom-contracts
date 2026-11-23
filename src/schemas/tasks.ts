@@ -21,7 +21,6 @@ export const taskMessageSchema = z
   .object({
     id: uuidSchema,
     queue: taskQueueNameSchema,
-    /** e.g. `media.resize-image` — dotted, unlike the queue name itself. */
     type: z.string().min(1).max(64),
     idempotencyKey: z.string().min(1).max(128),
     enqueuedAt: isoDateSchema,

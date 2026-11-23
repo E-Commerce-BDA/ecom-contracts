@@ -20,7 +20,6 @@ import { imageRefSchema, versionSchema } from "./common.js";
 const footerLabelSchema = z.string().trim().min(1).max(60);
 const footerHeadingSchema = z.string().trim().min(1).max(40);
 
-/** Internal path (/about) or absolute http(s) URL; never //host, data:, js:. */
 const footerHrefSchema = z
   .string()
   .trim()
@@ -99,10 +98,8 @@ export const footerResponseSchema = z
   })
   .strict();
 
-/** Admin write body: the full footer document, replace-semantics. */
 export const updateFooterSchema = footerSchema;
 
-/** Bounds re-exported for the renderer registry and admin copy. */
 export const FOOTER_LIMITS = {
   columns: 6,
   linksPerColumn: 12,

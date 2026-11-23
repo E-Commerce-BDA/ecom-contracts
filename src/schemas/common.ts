@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Shared primitive schemas for CMS payloads.
- *
- * These are transport/storage contracts, not storefront resolvers. Optional
- * means "inherit" or "absent"; null is never a valid override.
- */
 
 export const hexColorSchema = z
   .string()
