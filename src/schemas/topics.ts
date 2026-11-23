@@ -135,10 +135,6 @@ export const EVENT_TOPIC_NAMES = Object.keys(EVENT_TOPICS) as [
 
 export const eventTopicSchema = z.enum(EVENT_TOPIC_NAMES);
 
-/**
- * Payload schema per topic. Typed as a full record so a new topic cannot be
- * registered without a payload contract in the same change.
- */
 export const eventPayloadSchemas = {
   "user.registered": userRegisteredPayloadSchema,
   "cart.updated": cartUpdatedPayloadSchema,

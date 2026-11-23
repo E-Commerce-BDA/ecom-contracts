@@ -290,7 +290,6 @@ describe("search contracts", () => {
     });
 
     it("blogUpdatedPayloadSchema preserves backwards compatibility while supporting enriched fields", () => {
-      // 1.0.0 minimal payload
       const v100Payload = {
         blogId: VALID_UUID,
         slug: "intro-post",
@@ -300,7 +299,6 @@ describe("search contracts", () => {
         "intro-post",
       );
 
-      // 1.1.0 enriched payload
       const v110Payload = {
         blogId: VALID_UUID,
         slug: "intro-post",

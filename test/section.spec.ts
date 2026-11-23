@@ -597,7 +597,6 @@ describe("PDP sections 1.14", () => {
         },
       }).success,
     ).toBe(false);
-    // brand source is a valid non-manual source, but still forbids ids.
     expect(
       sectionSchema.safeParse({
         ...base,
