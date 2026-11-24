@@ -204,7 +204,7 @@ describe("search contracts", () => {
             updatedAt: NOW,
           },
         ],
-        nextCursor: "eyJ2IjoxLCJxIjoic2hvZXMiLCJzb3J0IjoicmVsZXZhbmNlIn0",
+        nextCursor: "eyJ2IjoyLCJxIjoiMDFlYTVkZGQzYmU1NDc3YWMzZWFlMjM2NmZhMTIwNjQ2MTVjNDg1YTU0MTY4MmRiM2U2MmQyODMyNDEwNTVhNiIsInNvcnQiOiJyZWxldmFuY2UiLCJ0eXBlIjoicHJvZHVjdCIsImlkIjoiMDE5MGE4YjAtMDAwMC03MDAwLTgwMDAtMDAwMDAwMDAwMjAyIiwicmFuayI6MC41LCJwb3B1bGFyaXR5IjoxNSwidG90YWwiOjF9",
         totalHits: 1,
       };
       const parsed = searchResponseSchema.parse(searchRes);
