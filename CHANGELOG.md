@@ -2,6 +2,15 @@
 
 All notable contract changes are recorded here.
 
+## 1.17.0 — 2026-11-25
+
+Email template vocabulary (MINOR release, backwards compatible with 1.16.0).
+
+- `emailTemplateSchema` gains `"status-update"`: an order status notice is now
+  its own email instead of reusing `order-confirmation`. The existing three
+  values are unchanged, so older payloads still validate. No payload shape
+  changed; an address is still absent from every job.
+
 ## 1.16.0 — 2026-11-17
 
 PDP depth (MINOR release, backwards compatible with 1.15.0).

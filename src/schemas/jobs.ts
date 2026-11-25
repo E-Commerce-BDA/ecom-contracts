@@ -25,6 +25,7 @@ export const emailTemplateSchema = z.enum([
   "order-confirmation",
   "cart-abandoned",
   "welcome",
+  "status-update",
 ]);
 
 /**

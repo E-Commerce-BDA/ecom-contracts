@@ -59,7 +59,17 @@ describe("sendEmailJobSchema", () => {
     expect(sendEmailJobSchema.safeParse(withoutKey).success).toBe(false);
   });
 
-  it("rejects a template that is not one of the three emails", () => {
+  it("accepts a status-update job keyed by order", () => {
+    expect(
+      sendEmailJobSchema.safeParse({
+        template: "status-update",
+        orderId: "0190a8b0-0000-7000-8000-000000000001",
+        idempotencyKey: "order.status.updated:1",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects a template that is not one of the four emails", () => {
     expect(sendEmailJobSchema.safeParse({ ...emailJob, template: "reset-password" }).success).toBe(false);
   });
 });
