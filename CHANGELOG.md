@@ -2,6 +2,16 @@
 
 All notable contract changes are recorded here.
 
+## 2.0.0 — 2026-11-26
+
+Canonical envelope only (MAJOR, breaking from 1.x).
+
+- `eventEnvelopeSchema` now requires `type`, `version` and `idempotencyKey`.
+  The 1.x aliases `topic` and `eventType` are removed, and `readEventEnvelope`
+  no longer falls back between them or defaults missing fields.
+- Producers must emit the full envelope. Stored 1.x outbox rows need a backfill
+  before the relay parses them with this version.
+
 ## 1.17.0 — 2026-11-25
 
 Email template vocabulary (MINOR release, backwards compatible with 1.16.0).

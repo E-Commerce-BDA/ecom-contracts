@@ -460,8 +460,9 @@ describe("Events & Jobs schemas", () => {
 
     const envelope = {
       id: "0190a1b2-c3d4-7e8f-9012-3456789abcde",
-      topic: "cms.events",
-      eventType: "cms.updated",
+      type: "cms.updated",
+      version: 1,
+      idempotencyKey: "cms-updated-1",
       producer: "cms-svc",
       timestamp: "2026-10-28T09:30:00.000Z",
       payload: cmsPayload,
@@ -480,7 +481,7 @@ describe("Events & Jobs schemas", () => {
   });
 });
 
-describe("Event envelope 1.3.0", () => {
+describe("Event envelope 2.0.0", () => {
   const base = {
     id: "0190a1b2-c3d4-7e8f-9012-3456789abcde",
     producer: "order-svc",
@@ -499,52 +500,19 @@ describe("Event envelope 1.3.0", () => {
     expect(readEventEnvelope(envelope)).toEqual(envelope);
   });
 
-  it("normalizes a legacy CMS envelope whose topic is not the event name", () => {
-    const envelope = {
-      ...base,
-      topic: "cms.events",
-      eventType: "cms.updated",
-    };
-    expect(readEventEnvelope(envelope)).toEqual({
-      ...base,
-      type: "cms.updated",
-      version: 1,
-      idempotencyKey: base.id,
-    });
+  it("rejects legacy topic/eventType aliases", () => {
+    const legacy = { ...base, topic: "cms.events", eventType: "cms.updated" };
+    expect(() => readEventEnvelope(legacy)).toThrow();
+    expect(eventEnvelopeSchema.safeParse(legacy).success).toBe(false);
   });
 
-  it("accepts topic-only and eventType-only legacy envelopes", () => {
-    const topicOnly = { ...base, topic: "product.updated" };
-    const eventTypeOnly = { ...base, eventType: "blog.updated" };
-    expect(readEventEnvelope(topicOnly).type).toBe("product.updated");
-    expect(readEventEnvelope(eventTypeOnly).type).toBe("blog.updated");
-  });
-
-  it("rejects an envelope with no identifier", () => {
+  it("rejects an envelope with no canonical type", () => {
     expect(eventEnvelopeSchema.safeParse(base).success).toBe(false);
   });
 
-  it("rejects dual-write drift when type disagrees with a legacy field", () => {
-    const topicDrift = { ...base, type: "order.created", topic: "order.events" };
-    const eventTypeDrift = {
-      ...base,
-      type: "order.created",
-      eventType: "order.updated",
-    };
-    expect(eventEnvelopeSchema.safeParse(topicDrift).success).toBe(false);
-    expect(eventEnvelopeSchema.safeParse(eventTypeDrift).success).toBe(false);
-    expect(() => readEventEnvelope(topicDrift)).toThrow();
-    expect(() => readEventEnvelope(eventTypeDrift)).toThrow();
-  });
-
-  it("accepts a dual-write envelope when all identifiers agree", () => {
-    const envelope = {
-      ...base,
-      type: "cms.updated",
-      topic: "cms.updated",
-      eventType: "cms.updated",
-    };
-    expect(readEventEnvelope(envelope).type).toBe("cms.updated");
+  it("rejects version and idempotencyKey only supplied by fallback", () => {
+    const missing = { ...base, type: "order.created" };
+    expect(() => readEventEnvelope(missing)).toThrow();
   });
 
   it("requires version and idempotencyKey in the canonical schema", () => {

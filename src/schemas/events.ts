@@ -4,46 +4,6 @@ import { blogStatusSchema } from "./blogs.js";
 
 const eventIdentifierSchema = z.string().min(1);
 
-export const eventEnvelopeSchema = z
-  .object({
-    id: uuidSchema,
-    type: eventIdentifierSchema.optional(),
-    topic: eventIdentifierSchema.optional(),
-    eventType: eventIdentifierSchema.optional(),
-    producer: z.string().min(1),
-    timestamp: isoDateSchema,
-    idempotencyKey: z.string().min(1).optional(),
-    // Envelope versions are 1-based; CMS revision `versionSchema` is 0-based.
-    version: z.number().int().positive().optional(),
-    payload: z.record(z.string(), z.unknown()),
-  })
-  .strict()
-  .superRefine((envelope, ctx) => {
-    if (!envelope.type && !envelope.topic && !envelope.eventType) {
-      ctx.addIssue({
-        code: "custom",
-        message: "event envelope requires type, topic, or eventType",
-        path: ["type"],
-      });
-    }
-    if (envelope.type) {
-      if (envelope.topic && envelope.topic !== envelope.type) {
-        ctx.addIssue({
-          code: "custom",
-          message: "event envelope type must equal topic",
-          path: ["topic"],
-        });
-      }
-      if (envelope.eventType && envelope.eventType !== envelope.type) {
-        ctx.addIssue({
-          code: "custom",
-          message: "event envelope type must equal eventType",
-          path: ["eventType"],
-        });
-      }
-    }
-  });
-
 export const canonicalEventEnvelopeSchema = z
   .object({
     id: uuidSchema,
@@ -55,6 +15,10 @@ export const canonicalEventEnvelopeSchema = z
     payload: z.record(z.string(), z.unknown()),
   })
   .strict();
+
+// 2.0.0: one canonical shape. The 1.x `topic`/`eventType` aliases and the
+// dual-read fallback are removed; every producer must emit the full envelope.
+export const eventEnvelopeSchema = canonicalEventEnvelopeSchema;
 
 export const cmsUpdatedPayloadSchema = z
   .object({
@@ -314,22 +278,7 @@ export type OrderStatusUpdatedPayload = z.infer<
 >;
 export type PageViewedPayload = z.infer<typeof pageViewedPayloadSchema>;
 
+/** 2.0.0: canonical-only, no alias fallback and no defaulted fields. */
 export function readEventEnvelope(input: unknown): CanonicalEventEnvelope {
-  const envelope = eventEnvelopeSchema.parse(input);
-  const type = envelope.type ?? envelope.eventType ?? envelope.topic;
-
-  if (!type) {
-    // The schema rejects this, but keep the invariant explicit for TypeScript.
-    throw new Error("event envelope requires type, topic, or eventType");
-  }
-
-  return {
-    id: envelope.id,
-    type,
-    version: envelope.version ?? 1,
-    timestamp: envelope.timestamp,
-    producer: envelope.producer,
-    idempotencyKey: envelope.idempotencyKey ?? envelope.id,
-    payload: envelope.payload,
-  };
+  return canonicalEventEnvelopeSchema.parse(input);
 }

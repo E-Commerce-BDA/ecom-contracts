@@ -240,11 +240,10 @@ describe("search contracts", () => {
   });
 
   describe("event schemas", () => {
-    it("eventEnvelopeSchema accepts optional idempotencyKey and version", () => {
+    it("eventEnvelopeSchema requires type, idempotencyKey and version", () => {
       const envelope = {
         id: VALID_UUID,
-        topic: "product.updated",
-        eventType: "product.updated",
+        type: "product.updated",
         producer: "catalog-svc",
         timestamp: NOW,
         idempotencyKey: "evt-prod-101",

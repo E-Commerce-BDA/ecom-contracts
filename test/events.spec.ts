@@ -520,6 +520,8 @@ describe("parseEventEnvelope", () => {
   const envelope: EventEnvelope = {
     id: uuid("901"),
     type: "user.registered",
+    version: 1,
+    idempotencyKey: "user-registered-501",
     producer: "auth-svc",
     timestamp: "2026-10-29T08:00:00.000Z",
     payload: {
