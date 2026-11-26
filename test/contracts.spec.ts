@@ -62,6 +62,16 @@ describe("Theme schemas", () => {
     expect(res.success).toBe(true);
   });
 
+  it("accepts the additive configured flag on theme responses", () => {
+    expect(
+      themeResponseSchema.safeParse({
+        theme: { input: { borderRadius: 10 } },
+        version: 4,
+        configured: true,
+      }).success,
+    ).toBe(true);
+  });
+
   it("rejects unknown fields when strict", () => {
     const res = themeSettingsSchema.safeParse({
       button: { unknownField: true },

@@ -2,6 +2,20 @@
 
 All notable contract changes are recorded here.
 
+## 2.1.0 — 2026-11-26
+
+CMS state metadata (MINOR, backwards compatible with 2.0.0).
+
+- `footerResponseSchema`, `themeResponseSchema`, `navResponseSchema` and
+  `pageSettingsResponseSchema` accept an optional `configured` boolean, so a
+  document that exists but was cleared is distinguishable from one never
+  configured.
+- `sectionListEnvelopeSchema` accepts an optional `state` of
+  `missing | empty | published`, describing shopper visibility even on a
+  preview read.
+- Consumers pinned to 2.0.0 must repin to this tarball before a CMS deployment
+  that emits these fields; the response schemas are strict.
+
 ## 2.0.0 — 2026-11-26
 
 Canonical envelope only (MAJOR, breaking from 1.x).

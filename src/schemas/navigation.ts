@@ -205,6 +205,7 @@ export const navResponseSchema = z
   .object({
     navbar: navSettingsSchema,
     version: versionSchema,
+    configured: z.boolean().optional(),
   })
   .strict();
 

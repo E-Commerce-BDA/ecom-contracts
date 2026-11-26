@@ -95,6 +95,7 @@ export const footerResponseSchema = z
   .object({
     footer: footerSchema,
     version: versionSchema,
+    configured: z.boolean().optional(),
   })
   .strict();
 

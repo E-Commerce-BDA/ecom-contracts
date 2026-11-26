@@ -217,6 +217,8 @@ export const themeResponseSchema = z
   .object({
     theme: themeSettingsSchema,
     version: versionSchema,
+    // cms-012: distinguishes a document that exists from one never configured.
+    configured: z.boolean().optional(),
   })
   .strict();
 

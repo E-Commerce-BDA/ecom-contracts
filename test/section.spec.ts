@@ -669,6 +669,23 @@ describe("PDP sections 1.14", () => {
     expect(sectionListResponseSchema.safeParse(envelope).success).toBe(false);
   });
 
+  it("accepts the additive shopper-visibility state from cms-012", () => {
+    expect(
+      sectionListEnvelopeSchema.safeParse({
+        sections: [],
+        version: 3,
+        state: "missing",
+      }).success,
+    ).toBe(true);
+    expect(
+      sectionListEnvelopeSchema.safeParse({
+        sections: [],
+        version: 3,
+        state: "draft",
+      }).success,
+    ).toBe(false);
+  });
+
   it("validates clone requests", () => {
     expect(
       cloneSectionsSchema.safeParse({

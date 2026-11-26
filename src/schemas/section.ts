@@ -169,6 +169,8 @@ export const sectionListEnvelopeSchema = z
   .object({
     sections: z.array(z.unknown()),
     version: versionSchema,
+    // cms-012: shopper visibility state, even on a preview read.
+    state: z.enum(["missing", "empty", "published"]).optional(),
   })
   .strict();
 

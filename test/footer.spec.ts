@@ -133,6 +133,23 @@ describe("footerResponseSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts the additive configured flag from cms-012", () => {
+    expect(
+      footerResponseSchema.safeParse({
+        footer: VALID_FOOTER,
+        version: 3,
+        configured: false,
+      }).success,
+    ).toBe(true);
+    expect(
+      footerResponseSchema.safeParse({
+        footer: VALID_FOOTER,
+        version: 3,
+        configured: "yes",
+      }).success,
+    ).toBe(false);
+  });
+
   it("refuses a missing or fractional version", () => {
     expect(
       footerResponseSchema.safeParse({ footer: {} }).success,

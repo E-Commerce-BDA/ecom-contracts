@@ -214,6 +214,7 @@ export const pageSettingsResponseSchema = z
   .object({
     settings: authSettingsSchema,
     version: versionSchema,
+    configured: z.boolean().optional(),
   })
   .strict();
 
