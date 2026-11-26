@@ -35,4 +35,4 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" ./*.tgz --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" "./ecom-contracts-${GITHUB_REF_NAME#v}.tgz" --title "$GITHUB_REF_NAME" --generate-notes
