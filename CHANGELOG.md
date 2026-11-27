@@ -2,6 +2,56 @@
 
 All notable contract changes are recorded here.
 
+## 2.2.0 — 2026-11-27
+
+Layered storefront theme and versioned resolved config (MINOR, backwards
+compatible with 2.1.0).
+
+- `theme.ts`: added `themePaletteSchema`, exposed as
+  `themeSettingsSchema.palette`. Sparse optional groups: `brand`,
+  `ink`, `surfaces`, `sale`, `success`/`warning`/`error` triplets
+  (`{fg, fill, bg, border}`, grouped so one semantic status is one edit),
+  `navbar`, `footer`, `scrim`, `state`, `radii`, `type`. Colours use the
+  existing `hexColorSchema.or(z.literal(""))` sentinel; only `scrim` accepts
+  `rgb/rgba/hsl/hsla()` and `transparent` via `cssColorSchema` (overlays need
+  translucency). `radii` and `type` are nested groups; their numerics are
+  bounded at the resolver clamps and font names are checked as plain font
+  stacks, not stylesheets.
+- Added `themeSettingsSchema` component groups: `navbar` (the `--nb-*`
+  paint/geometry projection only — link content and sticky mode stay in
+  `navigation.ts`), `filterRail` (`--facet-*`), `drawer` (paint/motion; the
+  side stays `nav.mobile.drawerSide`), `marquee` (speed 20–200, direction
+  `left|right`, pauseOnHover) and `grid` (gap 0–48).
+- `themeProductCardSchema` gains `ctaBg`, `ctaTextColor`, `ctaBorderColor`;
+  the storefront resolver already emits the matching `--pc-cta-*` vars.
+- Exported `resolvedThemeSchema` / `themeVarsSchema` (records of CSS custom
+  properties with concrete string or number values) for admin preview.
+- `navigation.ts`: nav links of both existing kinds may carry optional
+  `groups` — each `{title, items[{label, href, description?, badge?}],
+  columns?, promo?}` is a CMS-authored mega-menu column. Mega-menu hrefs
+  accept internal paths or http(s) URLs, never `javascript:`/`data:`.
+- Added `storefront-config.ts`: `storefrontConfigResponseSchema` carries
+  `configVersion` (semver-like string), `revision` (numeric CMS revision),
+  resolved `theme`, optional sparse `palette`, `navigation`, `footer`,
+  `badges`, and optional `preview {tokenUrl, queryParam, headerName}`. A
+  deprecated numeric `version` alias is accepted for one release and is
+  scheduled for removal in 2.3.0. Exported from `src/index.ts`.
+
+**Why one resolved payload.** The shopper shell needs theme, nav, footer and
+badges together; one versioned read avoids four round trips and gives the
+admin preview both the sparse edit and its painted result. **Rejected:**
+letting admin write raw CSS var strings (no validation and an injection
+surface), renaming existing theme/nav fields (a breaking change for 2.1.0
+readers), and duplicating nav content fields inside the theme.
+
+**Compatibility.** Every new field is optional, no existing field is renamed,
+and every object stays `.strict()`. A 2.1.0 theme body parses unchanged
+(regression-tested). Strict-schema adoption ordering still applies: repin
+every consumer before a producer starts emitting the new keys.
+
+**Gates.** `npx tsc -p tsconfig.json --noEmit`, `pnpm test`, `pnpm build` and
+`pnpm pack` all green.
+
 ## 2.1.0 — 2026-11-26
 
 CMS state metadata (MINOR, backwards compatible with 2.0.0).

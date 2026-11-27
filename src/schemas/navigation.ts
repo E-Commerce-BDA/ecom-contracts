@@ -39,6 +39,55 @@ export const linkScheduleSchema = z
   })
   .strict();
 
+/** Mega-menu links land in `href`, so unsafe schemes are refused here. */
+export const navHrefSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2048)
+  .refine(
+    (value) =>
+      (value.startsWith("/") && !value.startsWith("//")) ||
+      /^https?:\/\//i.test(value),
+    "href must be an internal path or an http(s) URL",
+  );
+
+/** One cell of a CMS-authored mega-menu column. */
+export const megaMenuLinkItemSchema = z
+  .object({
+    label: z.string().min(1).max(64),
+    href: navHrefSchema,
+    description: z.string().max(200).optional(),
+    badge: linkBadgeSchema.optional(),
+  })
+  .strict();
+
+/** Optional feature tile at the foot of a mega-menu group. */
+export const megaMenuPromoSchema = z
+  .object({
+    title: z.string().min(1).max(80),
+    href: navHrefSchema,
+    description: z.string().max(200).optional(),
+    imageUrl: imageRefSchema.or(z.literal("")).optional(),
+    badge: linkBadgeSchema.optional(),
+  })
+  .strict();
+
+/**
+ * CMS-backed mega-menu group. `columns` is the layout hint for this group's
+ * items (the renderer clamps it to its own breakpoint budget); `promo` is
+ * optional so a plain link list stays a plain link list.
+ */
+export const megaMenuGroupSchema = z
+  .object({
+    title: z.string().min(1).max(64),
+    items: z.array(megaMenuLinkItemSchema).min(1).max(12),
+    columns: z.number().int().min(1).max(4).optional(),
+    promo: megaMenuPromoSchema.optional(),
+  })
+  .strict();
+
+/** Both link kinds gain the same optional mega-menu groups in 2.2.0. */
 export const navLinkSchema = z.discriminatedUnion("kind", [
   z
     .object({
@@ -50,6 +99,7 @@ export const navLinkSchema = z.discriminatedUnion("kind", [
       badge: linkBadgeSchema.optional(),
       highlight: linkHighlightSchema.optional(),
       schedule: linkScheduleSchema.optional(),
+      groups: z.array(megaMenuGroupSchema).max(6).optional(),
     })
     .strict(),
   z
@@ -61,6 +111,7 @@ export const navLinkSchema = z.discriminatedUnion("kind", [
       badge: linkBadgeSchema.optional(),
       highlight: linkHighlightSchema.optional(),
       schedule: linkScheduleSchema.optional(),
+      groups: z.array(megaMenuGroupSchema).max(6).optional(),
     })
     .strict(),
 ]);
@@ -210,6 +261,10 @@ export const navResponseSchema = z
   .strict();
 
 export type NavLink = z.infer<typeof navLinkSchema>;
+export type NavHref = z.infer<typeof navHrefSchema>;
+export type MegaMenuLinkItem = z.infer<typeof megaMenuLinkItemSchema>;
+export type MegaMenuPromo = z.infer<typeof megaMenuPromoSchema>;
+export type MegaMenuGroup = z.infer<typeof megaMenuGroupSchema>;
 export type NavRegionsField = z.infer<typeof navRegionsSchema>;
 export type NavLogoField = z.infer<typeof navLogoSchema>;
 export type NavBarField = z.infer<typeof navBarSchema>;

@@ -34,6 +34,33 @@ tarball; floating ranges are not allowed.
 - A new major may provide `vN` subpath exports for a dual-publish window when a
   second major exists. v1 does not need that yet.
 
+## 2.2.0 — 2026-11-27
+
+Layered palette, component groups, mega-menu and the resolved config envelope
+(MINOR, additive to 2.1.0).
+
+- `themeSettingsSchema` gains `palette`, `navbar`, `filterRail`, `drawer`,
+  `marquee` and `grid`; `themeProductCardSchema` gains three CTA colours. All
+  are optional and every object remains `.strict()`.
+- `navLinkSchema` gains optional `groups` on both existing kinds; no existing
+  nav field is renamed or narrowed.
+- New `storefrontConfigResponseSchema` is a new export, not a change to an
+  existing response. Its `configVersion` is a semver-like **string** (the
+  contract shape version, so prereleases are expressible) and `revision` is a
+  number (the CMS document revision). Those two clocks are deliberately
+  different: repinning the package must not be confused with an admin edit.
+- `version` in that new response is a deprecated numeric alias, accepted for
+  one release and removed in 2.3.0. Do not add it to new producers.
+- Resolved CSS-var maps (`themeVarsSchema`, `resolvedThemeSchema`) carry
+  concrete `string | number` values; the empty-string "no override" sentinel
+  belongs only in the sparse source, never in the resolved output.
+
+**Why additive is enough.** 2.1.0 readers ignore absent keys, and their
+strict parsers reject only *unknown* keys — so the adoption ordering below
+still governs when producers may start writing the new fields. **Rejected:**
+a major with renamed fields or relaxed strictness, which would force every
+consumer to re-pin at once for no new capability.
+
 ## Strict-schema adoption ordering
 
 Every event payload schema is `.strict()`, so adding an optional field is MINOR

@@ -20,3 +20,4 @@ export * from "./schemas/tasks.js";
 export * from "./schemas/queues.js";
 export * from "./schemas/search.js";
 export * from "./schemas/catalog.js";
+export * from "./schemas/storefront-config.js";

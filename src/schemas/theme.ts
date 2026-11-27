@@ -3,6 +3,22 @@ import { hexColorSchema, imageRefSchema, versionSchema } from "./common.js";
 
 const colorOrEmptySchema = hexColorSchema.or(z.literal(""));
 
+/**
+ * Scrim layers sit over photography, so authors need translucent colours as
+ * well as hex. The character class is deliberately narrow: a colour is never
+ * an invitation to smuggle `url()`, a semicolon or braces into inline style.
+ * Empty string keeps the same "no override" sentinel as every other colour.
+ */
+export const cssColorSchema = z
+  .string()
+  .max(64)
+  .regex(
+    /^(?:#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|(?:rgba?|hsla?)\([0-9.,%\s/]+\)|transparent|currentColor)$/,
+    "must be a hex, rgb/rgba/hsl/hsla colour, transparent, or currentColor",
+  );
+
+export const cssColorOrEmptySchema = cssColorSchema.or(z.literal(""));
+
 export const themeButtonSchema = z
   .object({
     defaultVariant: z
@@ -152,6 +168,10 @@ export const themeProductCardSchema = z
     mutedTextColor: colorOrEmptySchema.optional(),
     priceColor: colorOrEmptySchema.optional(),
     comparePriceColor: colorOrEmptySchema.optional(),
+    // 2.2.0: the resolver already emits --pc-cta-* from these three keys.
+    ctaBg: colorOrEmptySchema.optional(),
+    ctaTextColor: colorOrEmptySchema.optional(),
+    ctaBorderColor: colorOrEmptySchema.optional(),
     imageBlendMode: z.enum(["normal", "multiply", "darken", "overlay", "screen"]).optional(),
     imageFit: z.enum(["cover", "contain"]).optional(),
     badgePosition: z.enum(["left", "right"]).optional(),
@@ -196,6 +216,239 @@ export const themePhotoSettingsSchema = z
   })
   .strict();
 
+/* ------------------------------------------------------------------ *
+ * 2.2.0 — layered palette and component groups
+ *
+ * Every key is optional: absence means "inherit the CSS fallback" and the
+ * empty string is the existing "no override" colour sentinel. Nested objects
+ * stay `.strict()` so a mistyped key fails at the CMS boundary instead of
+ * silently disappearing. Numeric bounds mirror the resolver's clamps; the
+ * contract refuses an out-of-range value rather than rewriting it.
+ * ------------------------------------------------------------------ */
+
+export const themePaletteBrandSchema = z
+  .object({
+    brand: colorOrEmptySchema.optional(),
+    brandHover: colorOrEmptySchema.optional(),
+    onBrand: colorOrEmptySchema.optional(),
+    brandWash: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteInkSchema = z
+  .object({
+    ink: colorOrEmptySchema.optional(),
+    muted: colorOrEmptySchema.optional(),
+    border: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteSurfacesSchema = z
+  .object({
+    surface: colorOrEmptySchema.optional(),
+    surfaceSunken: colorOrEmptySchema.optional(),
+    surfaceRaised: colorOrEmptySchema.optional(),
+    imagePlaceholder: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteSaleSchema = z
+  .object({
+    saleFill: colorOrEmptySchema.optional(),
+    saleText: colorOrEmptySchema.optional(),
+    saleWash: colorOrEmptySchema.optional(),
+    onSale: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+/**
+ * Status is one semantic unit (`success: {fg, fill, bg, border}`), not four
+ * flat `successFg`-style keys: an editor edits a status face at a time, and
+ * deleting a key resets only that face — never writes `null`.
+ */
+export const themePaletteStatusSchema = z
+  .object({
+    fg: colorOrEmptySchema.optional(),
+    fill: colorOrEmptySchema.optional(),
+    bg: colorOrEmptySchema.optional(),
+    border: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteNavbarSchema = z
+  .object({
+    bg: colorOrEmptySchema.optional(),
+    text: colorOrEmptySchema.optional(),
+    hover: colorOrEmptySchema.optional(),
+    badgeBg: colorOrEmptySchema.optional(),
+    badgeText: colorOrEmptySchema.optional(),
+    announceBg: colorOrEmptySchema.optional(),
+    announceText: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteFooterSchema = z
+  .object({
+    bg: colorOrEmptySchema.optional(),
+    text: colorOrEmptySchema.optional(),
+    link: colorOrEmptySchema.optional(),
+    hover: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteScrimSchema = z
+  .object({
+    soft: cssColorOrEmptySchema.optional(),
+    panel: cssColorOrEmptySchema.optional(),
+    strong: cssColorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteStateSchema = z
+  .object({
+    focusOutline: colorOrEmptySchema.optional(),
+    focusHalo: colorOrEmptySchema.optional(),
+    disabledBg: colorOrEmptySchema.optional(),
+    disabledText: colorOrEmptySchema.optional(),
+    disabledBorder: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+export const themePaletteRadiiSchema = z
+  .object({
+    radiusButton: z.number().int().min(0).max(24).optional(),
+    radiusCard: z.number().int().min(0).max(24).optional(),
+    radiusSm: z.number().int().min(0).max(8).optional(),
+    radiusMd: z.number().int().min(0).max(16).optional(),
+  })
+  .strict();
+
+/** A font stack, not a stylesheet: braces, semicolons and url() are refused. */
+export const themeFontStackSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(120)
+  .refine(
+    (value) => !/[;{}<>]|url\s*\(/i.test(value),
+    "must be a plain CSS font stack",
+  );
+
+export const themePaletteTypeSchema = z
+  .object({
+    fontSans: themeFontStackSchema.optional(),
+    fontDisplay: themeFontStackSchema.optional(),
+    fsDisplay1: z.number().int().min(24).max(96).optional(),
+    fsDisplay2: z.number().int().min(20).max(72).optional(),
+    fsDisplay3: z.number().int().min(16).max(56).optional(),
+    fsBody: z.number().int().min(12).max(20).optional(),
+    fsCaption: z.number().int().min(10).max(16).optional(),
+  })
+  .strict();
+
+/** Sparse admin-authored palette: the source the resolver paints from. */
+export const themePaletteSchema = z
+  .object({
+    brand: themePaletteBrandSchema.optional(),
+    ink: themePaletteInkSchema.optional(),
+    surfaces: themePaletteSurfacesSchema.optional(),
+    sale: themePaletteSaleSchema.optional(),
+    success: themePaletteStatusSchema.optional(),
+    warning: themePaletteStatusSchema.optional(),
+    error: themePaletteStatusSchema.optional(),
+    navbar: themePaletteNavbarSchema.optional(),
+    footer: themePaletteFooterSchema.optional(),
+    scrim: themePaletteScrimSchema.optional(),
+    state: themePaletteStateSchema.optional(),
+    radii: themePaletteRadiiSchema.optional(),
+    type: themePaletteTypeSchema.optional(),
+  })
+  .strict();
+
+/**
+ * Paint/geometry projection of `--nb-*` only. Nav *content* — link items,
+ * sticky mode, region flags — stays owned by navigation.ts, so there is one
+ * owner per concept instead of two drifting copies.
+ */
+export const themeNavbarGroupSchema = z
+  .object({
+    height: z.number().int().min(48).max(96).optional(),
+    bg: colorOrEmptySchema.optional(),
+    text: colorOrEmptySchema.optional(),
+    hover: colorOrEmptySchema.optional(),
+    badgeBg: colorOrEmptySchema.optional(),
+    badgeText: colorOrEmptySchema.optional(),
+    announceBg: colorOrEmptySchema.optional(),
+    announceText: colorOrEmptySchema.optional(),
+  })
+  .strict();
+
+/** Paint/geometry projection of `--facet-*` on the shop listing rail. */
+export const themeFilterRailGroupSchema = z
+  .object({
+    bg: colorOrEmptySchema.optional(),
+    border: colorOrEmptySchema.optional(),
+    title: colorOrEmptySchema.optional(),
+    label: colorOrEmptySchema.optional(),
+    gap: z.number().int().min(0).max(40).optional(),
+    pad: z.number().int().min(0).max(40).optional(),
+    radius: z.number().int().min(0).max(24).optional(),
+    actionGap: z.number().int().min(0).max(24).optional(),
+    maxHeight: z.number().int().min(120).max(800).optional(),
+    headGap: z.number().int().min(0).max(24).optional(),
+    titleSize: z.number().int().min(12).max(28).optional(),
+    innerGap: z.number().int().min(0).max(24).optional(),
+    labelSize: z.number().int().min(10).max(20).optional(),
+    priceGap: z.number().int().min(0).max(24).optional(),
+    tagGap: z.number().int().min(0).max(20).optional(),
+    tagMax: z.number().int().min(60).max(400).optional(),
+  })
+  .strict();
+
+/** Paint/motion of the filter/cart sheets; the side stays nav.mobile. */
+export const themeDrawerGroupSchema = z
+  .object({
+    bg: colorOrEmptySchema.optional(),
+    text: colorOrEmptySchema.optional(),
+    borderColor: colorOrEmptySchema.optional(),
+    overlayColor: cssColorOrEmptySchema.optional(),
+    width: z.number().int().min(280).max(480).optional(),
+    durationMs: z.number().int().min(100).max(600).optional(),
+    motion: z.enum(["slide", "fade", "none"]).optional(),
+  })
+  .strict();
+
+export const themeMarqueeGroupSchema = z
+  .object({
+    speed: z.number().int().min(20).max(200).optional(),
+    direction: z.enum(["left", "right"]).optional(),
+    pauseOnHover: z.boolean().optional(),
+  })
+  .strict();
+
+export const themeGridGroupSchema = z
+  .object({
+    gap: z.number().int().min(0).max(48).optional(),
+  })
+  .strict();
+
+export const cssVarNameSchema = z
+  .string()
+  .regex(/^--[a-z][a-z0-9-]*$/, "must be a lowercase CSS custom property name");
+
+/** Any CSS-var map: admin preview, resolver output, or a partial override. */
+export const themeVarsSchema = z.record(
+  cssVarNameSchema,
+  z.union([z.string(), z.number()]),
+);
+
+/**
+ * The concrete map served to the shopper shell. Same shape as themeVarsSchema
+ * by design: a resolved value is already a string or number, never an empty
+ * sentinel, so the receiver needs no second parsing rule.
+ */
+export const resolvedThemeSchema = themeVarsSchema;
+
 export const themeSettingsSchema = z
   .object({
     button: themeButtonSchema.optional(),
@@ -210,6 +463,12 @@ export const themeSettingsSchema = z
     dialog: themeDialogSchema.optional(),
     productCard: themeProductCardSchema.optional(),
     photoSettings: themePhotoSettingsSchema.optional(),
+    palette: themePaletteSchema.optional(),
+    navbar: themeNavbarGroupSchema.optional(),
+    filterRail: themeFilterRailGroupSchema.optional(),
+    drawer: themeDrawerGroupSchema.optional(),
+    marquee: themeMarqueeGroupSchema.optional(),
+    grid: themeGridGroupSchema.optional(),
   })
   .strict();
 
@@ -235,5 +494,24 @@ export type ThemeTooltipField = z.infer<typeof themeTooltipSchema>;
 export type ThemeDialogField = z.infer<typeof themeDialogSchema>;
 export type ThemeProductCardField = z.infer<typeof themeProductCardSchema>;
 export type ThemePhotoSettingsField = z.infer<typeof themePhotoSettingsSchema>;
+export type ThemePaletteBrandField = z.infer<typeof themePaletteBrandSchema>;
+export type ThemePaletteInkField = z.infer<typeof themePaletteInkSchema>;
+export type ThemePaletteSurfacesField = z.infer<typeof themePaletteSurfacesSchema>;
+export type ThemePaletteSaleField = z.infer<typeof themePaletteSaleSchema>;
+export type ThemePaletteStatusField = z.infer<typeof themePaletteStatusSchema>;
+export type ThemePaletteNavbarField = z.infer<typeof themePaletteNavbarSchema>;
+export type ThemePaletteFooterField = z.infer<typeof themePaletteFooterSchema>;
+export type ThemePaletteScrimField = z.infer<typeof themePaletteScrimSchema>;
+export type ThemePaletteStateField = z.infer<typeof themePaletteStateSchema>;
+export type ThemePaletteRadiiField = z.infer<typeof themePaletteRadiiSchema>;
+export type ThemePaletteTypeField = z.infer<typeof themePaletteTypeSchema>;
+export type ThemePaletteField = z.infer<typeof themePaletteSchema>;
+export type ThemeNavbarGroupField = z.infer<typeof themeNavbarGroupSchema>;
+export type ThemeFilterRailGroupField = z.infer<typeof themeFilterRailGroupSchema>;
+export type ThemeDrawerGroupField = z.infer<typeof themeDrawerGroupSchema>;
+export type ThemeMarqueeGroupField = z.infer<typeof themeMarqueeGroupSchema>;
+export type ThemeGridGroupField = z.infer<typeof themeGridGroupSchema>;
+export type ThemeVars = z.infer<typeof themeVarsSchema>;
+export type ResolvedTheme = z.infer<typeof resolvedThemeSchema>;
 export type ThemeSettings = z.infer<typeof themeSettingsSchema>;
 export type ThemeResponse = z.infer<typeof themeResponseSchema>;
